@@ -1,44 +1,44 @@
 
-# Ä¿Â¼¹¦ÄÜ
+# ç›®å½•åŠŸèƒ½
 
-    bin:    Æô¶¯½Å±¾ÎÄ¼þ
-    conf:   ÅäÖÃÎÄ¼þ
-    data:   ÐéÄâ»ú¼°Èí¼þ
-    doc:    ÎÄµµ
-    lib:    ¿âÎÄ¼þ(º¯ÊýÎÄ¼þ)
-    log:    ÈÕÖ¾ÎÄ¼þ
-    run:    ÔËÐÐ¹ý³ÌÖÐ²úÉúµÄÅäÖÃÎÄ¼þ
-    script: Î¬»¤½Å±¾
-    test:   ²âÊÔÎÄ¼þ
-    tmp:    ÁÙÊ±ÎÄ¼þ
-
-
+    bin:    å¯åŠ¨è„šæœ¬æ–‡ä»¶
+    conf:   é…ç½®æ–‡ä»¶
+    data:   è™šæ‹ŸæœºåŠè½¯ä»¶
+    doc:    æ–‡æ¡£
+    lib:    åº“æ–‡ä»¶(å‡½æ•°æ–‡ä»¶)
+    log:    æ—¥å¿—æ–‡ä»¶
+    run:    è¿è¡Œè¿‡ç¨‹ä¸­äº§ç”Ÿçš„é…ç½®æ–‡ä»¶
+    script: ç»´æŠ¤è„šæœ¬
+    test:   æµ‹è¯•æ–‡ä»¶
+    tmp:    ä¸´æ—¶æ–‡ä»¶
 
 
-# ÒÑÍê³É¹¦ÄÜ:
 
-    > ×Ô¶¯»¯²¿Êð: Ö§³ÖÈÎÒâÊýÁ¿½Úµã²¿Êð£¬×Ô¶¯¼ì²âMON, OSD£¬MDSµÈ×é¼þÒªÇó£»¿ÉÊµÏÖ°²×°¡¢Ð¶ÔØ¡¢À©ÈÝ¡¢Éý¼¶
-    > ×Ô¶¨Òå°²×°: Ö§³Ö×Ô¶¨ÒåÖ÷»úÃû¡¢×Ô¶¨È«¾Ö´ÅÅÌÉèÖÃ¡¢×Ô¶¨µ¥Ö÷»ú´ÅÅÌÉèÖÃ¡¢×Ô¶¨ÒåCeph¼¯ÈºÃû¼°¼¯Èº¶Ë¿Ú
-    > ´ÅÅÌ×ÔÓÅ»¯: ÈçÓÐSSDÔòÊ¹ÓÃÓÅ»¯Ëã·¨Ñ¡ÔñºÏÊÊSSD×öÎªjournal diskºÍPRIMARY AFFINITY disk; ÎÞSSDÔòÊ¹ÓÃ"shareMode"
-    > ´æ´¢×Ôµ÷ÓÅ: ²Ù×÷ÏµÍ³ÄÚºËµ÷ÓÅ¡¢CEPH¼Ü¹¹ÓÅ»¯¡¢´ÅÅÌ²ÎÊýÓÅ»¯¡¢primary affinity disk¡¢XFS fragmentation
-    > ´æ´¢×Ô²âÊÔ: »ùÓÚdd¡¢fioµÄ×Ô¶¯»¯´æ´¢ÐÔÄÜ²âÊÔÅÜ·ÖÏµÍ³£¬Õë¶Ô²»¶ÔÅäÖÃ²»Í¬¸ºÔØ½øÐÐÅÜ·Ö¡£
-    > ÆäËüÓÅ»¯µã: »ùÓÚrack¼¶±ðµÄ×Ô¶¯»¯Ö÷»úÃû¡¢IP¡¢×Ô¶¯·ÖÅä£»¸öÐÔ»¯°²×°·½Ê½Óë¼«¼ò»¯ÅäÖÃ
+
+# å·²å®ŒæˆåŠŸèƒ½:
+
+    > è‡ªåŠ¨åŒ–éƒ¨ç½²: æ”¯æŒä»»æ„æ•°é‡èŠ‚ç‚¹éƒ¨ç½²ï¼Œè‡ªåŠ¨æ£€æµ‹MON, OSDï¼ŒMDSç­‰ç»„ä»¶è¦æ±‚ï¼›å¯å®žçŽ°å®‰è£…ã€å¸è½½ã€æ‰©å®¹ã€å‡çº§
+    > è‡ªå®šä¹‰å®‰è£…: æ”¯æŒè‡ªå®šä¹‰ä¸»æœºåã€è‡ªå®šå…¨å±€ç£ç›˜è®¾ç½®ã€è‡ªå®šå•ä¸»æœºç£ç›˜è®¾ç½®ã€è‡ªå®šä¹‰Cephé›†ç¾¤ååŠé›†ç¾¤ç«¯å£
+    > ç£ç›˜è‡ªä¼˜åŒ–: å¦‚æœ‰SSDåˆ™ä½¿ç”¨ä¼˜åŒ–ç®—æ³•é€‰æ‹©åˆé€‚SSDåšä¸ºjournal diskå’ŒPRIMARY AFFINITY disk; æ— SSDåˆ™ä½¿ç”¨"shareMode"
+    > å­˜å‚¨è‡ªè°ƒä¼˜: æ“ä½œç³»ç»Ÿå†…æ ¸è°ƒä¼˜ã€CEPHæž¶æž„ä¼˜åŒ–ã€ç£ç›˜å‚æ•°ä¼˜åŒ–ã€primary affinity diskã€XFS fragmentation
+    > å…¶å®ƒä¼˜åŒ–ç‚¹: åŸºäºŽrackçº§åˆ«çš„è‡ªåŠ¨åŒ–ä¸»æœºåã€IPã€è‡ªåŠ¨åˆ†é…ï¼›ä¸ªæ€§åŒ–å®‰è£…æ–¹å¼ä¸Žæžç®€åŒ–é…ç½®
     
     
-# Î´Íê³É¹¦ÄÜ£º
-    > ×Ô¶¯»¯²¿Êð: Ö§³Ö¶ÏµãÐø×°¹¦ÄÜ
-    > ×Ô¶¨ÒåÐÔÄÜ: Ô¤ÖÃ¶à³¡¾°ÅäÖÃÎÄ¼þ£¬¶Á¶àÐ´ÉÙ¡¢¶ÁÉÙÐ´¶à¡¢´óÐ¡ÎÄ¼þÓÅ»¯µÈ¡¢SSD cache×Ô¶¯cacheµÈ(Î´Íê³É)
-    > ÍøÂç¸ß¿ÉÓÃ: ×Ô¶¯»¯ÐÞ¸ÄÍø¿¨Ãû¡¢×Ô¶¯»¯ÍøÂçBonding¡¢ÍøÂç²ÎÊýµ÷ÓÅ
+# æœªå®ŒæˆåŠŸèƒ½ï¼š
+    > è‡ªåŠ¨åŒ–éƒ¨ç½²: æ”¯æŒæ–­ç‚¹ç»­è£…åŠŸèƒ½
+    > è‡ªå®šä¹‰æ€§èƒ½: é¢„ç½®å¤šåœºæ™¯é…ç½®æ–‡ä»¶ï¼Œè¯»å¤šå†™å°‘ã€è¯»å°‘å†™å¤šã€å¤§å°æ–‡ä»¶ä¼˜åŒ–ç­‰ã€SSD cacheè‡ªåŠ¨cacheç­‰(æœªå®Œæˆ)
+    > ç½‘ç»œé«˜å¯ç”¨: è‡ªåŠ¨åŒ–ä¿®æ”¹ç½‘å¡åã€è‡ªåŠ¨åŒ–ç½‘ç»œBondingã€ç½‘ç»œå‚æ•°è°ƒä¼˜
+    > å­˜å‚¨è‡ªæµ‹è¯•: åŸºäºŽddã€fioçš„è‡ªåŠ¨åŒ–å­˜å‚¨æ€§èƒ½æµ‹è¯•è·‘åˆ†ç³»ç»Ÿï¼Œé’ˆå¯¹ä¸å¯¹é…ç½®ä¸åŒè´Ÿè½½è¿›è¡Œè·‘åˆ†ã€‚
     
 
 
-# ²¿Êð
+# éƒ¨ç½²
 
-## Ó²¼þÒªÇó
-    ²¿Êð·þÎñÆ÷: Ö§³ÖKVMÐéÄâ»¯¼´¿É£¬¿ÉÊ¹ÓÃÈÎÒâ·þÎñÆ÷£¬È·±£ÍøÂçºÍÒª²¿ÊðµÄCephÍøÂçÄÜÁ¬Í¨¼´¿É
-    Ceph·þÎñÆ÷: ÄÜ°²×°CentOS7²Ù×÷ÏµÍ³¼´¿É, ²¿ÊðÎªOSD½ÚµãµÄ·þÎñÆ÷ÖÁÉÙÐèÒªÒ»¿éµ¥¶ÀµÄ´ÅÅÌ
+## ç¡¬ä»¶è¦æ±‚
+    éƒ¨ç½²æœåŠ¡å™¨: æ”¯æŒKVMè™šæ‹ŸåŒ–å³å¯ï¼Œå¯ä½¿ç”¨ä»»æ„æœåŠ¡å™¨ï¼Œç¡®ä¿ç½‘ç»œå’Œè¦éƒ¨ç½²çš„Cephç½‘ç»œèƒ½è¿žé€šå³å¯
+    CephæœåŠ¡å™¨: èƒ½å®‰è£…CentOS7æ“ä½œç³»ç»Ÿå³å¯, éƒ¨ç½²ä¸ºOSDèŠ‚ç‚¹çš„æœåŠ¡å™¨è‡³å°‘éœ€è¦ä¸€å—å•ç‹¬çš„ç£ç›˜
     
-## ²¿ÊðÁ÷³Ì
-    1. ÔÚ²¿Êð·þÎñÆ÷ÉÏ²¿Êð°²×°ÐéÄâ»ú
-    2. ½øÈë°²×°ÐéÄâ»ú, ÊäÈë/root/Ceph_AI/bin/install
+## éƒ¨ç½²æµç¨‹
+    1. åœ¨éƒ¨ç½²æœåŠ¡å™¨ä¸Šéƒ¨ç½²å®‰è£…è™šæ‹Ÿæœº
+    2. è¿›å…¥å®‰è£…è™šæ‹Ÿæœº, è¾“å…¥/root/Ceph_AI/bin/install
     3. enjoy ~
