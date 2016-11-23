@@ -1,0 +1,148 @@
+#/bin/sh
+#
+#####################################################################
+## scraid - a megaraid tool for dba
+## version - 1.0
+#####################################################################
+print_usage()
+{
+  echo
+    echo " Usage: scraid cmd [argments]"
+    echo "---------------------------------------------------------------------------"
+    echo "  cmd       argments                description"
+    echo "  ========  ======================  ==========================================="
+    echo "  info                             : Show all info about raid card"
+    echo "  log                              : Show log of raid card"
+    echo "  raid                             : Show raid info"
+    echo "  disk                             : Show all physical disks connect to raid card"
+    echo "  cache                            : Show cache policy of raid card"
+    echo "  diskcache                        : Show physical disk cache policy"
+    echo "  bbu                              : Show bbu info"
+    echo "  rate                             : Show rebuild rate, default is 30%"
+    echo "  setrate   [rate]                 : Set rebuild rate, be careful"
+    echo "  setcache  [policy]               : Set cache policy,maybe WT|WB|RA|NORA|ADRA|Cached|Direct|CachedBadBBUi|NoCachedBadBBU"
+    echo "  setdiskcache [enable|disable]    : Enable or disable physical disk cache "
+    echo "  help                             : Print this help info"
+    echo "=========================================================================="
+    echo "support for HP&LSI Raid-Card"
+}
+
+
+hptag=`/sbin/lspci |grep -i raid|grep -i Hewlett|wc -l`
+lsitag=`/sbin/lspci |grep -i raid|grep -i Mega|wc -l`
+if [ $lsitag -gt 0 ];then
+megacli="/opt/MegaRAID/MegaCli/MegaCli64"
+if [ ! -f $megacli ];then
+echo "you need to install MegaCli first. run sudo yum install MegaCli"
+exit
+fi
+elif [ $hptag -gt 0 ];then
+hpacucli="/usr/local/bin/hpacucli"
+if [ ! -f $hpacucli ];then
+hpacucli="/usr/sbin/hpacucli"
+if [ ! -f $hpacucli ];then
+echo "you need to install hpacucli first. run sudo yum install hpacucli"
+exit
+fi
+fi   
+else
+echo "The Raid-Card could not be identified"
+exit
+fi
+
+CMD=`echo $1 | tr [A-Z] [a-z]`
+if [ -z $CMD ];then
+/sbin/lspci | grep RAID
+fi
+if [ $lsitag -gt 0 ];then
+case $CMD in
+info)
+sudo $megacli -AdpAllInfo -aALL
+;;
+log)
+sudo $megacli -FwTermLog -Dsply -aALL 
+;;
+raid)
+sudo $megacli  -LDInfo -Lall -aALL
+;;
+disk)
+sudo $megacli -PDList -aALL
+;;
+cache)
+sudo $megacli -LDGetProp -Cache -LALL -aALL
+;;
+diskcache)
+sudo $megacli -LDGetProp -DskCache -LALL -aALL
+;;
+bbu)
+sudo $megacli -AdpBbuCmd -aALL
+;;
+rate)
+sudo $megacli -AdpGetProp RebuildRate -aAll
+;;
+setrate)
+sudo $megacli -AdpSetProp RebuildRate $2 -aALL
+;;
+setcache)
+sudo $megacli -LDSetProp $2 -Lall -aALL
+;;
+setdiskcache)
+if [ $2 == "enable" ];then
+sudo $megacli -LDSetProp EnDskCache -LAll -aAll
+elif [ $2 == "disable" ];then
+sudo $megacli -LDSetProp DisDskCache -LAll -aAll
+fi
+;;
+*)
+print_usage
+;;
+esac
+
+elif [ $hptag -gt 0 ];then
+tmpslot=`sudo hpacucli ctrl all show status | grep 'Smart Array'|awk '{ print $6 }'`
+
+case $CMD in
+info)
+sudo $hpacucli  controller slot=$tmpslot show 
+;;
+log)
+sudo $hpacucli ctrl all diag file=/tmp/diag.zip
+sudo unzip   /tmp/diag.log  -d /tmp
+sudo less /tmp/ADUReport.txt 
+;;
+raid)
+sudo $hpacucli  controller slot=$tmpslot logicaldrive all show 
+;;
+disk)
+sudo $hpacucli  controller slot=$tmpslot physicaldrive all  show 
+;;
+cache)
+sudo $hpacucli  controller slot=$tmpslot show 
+;;
+diskcache)
+sudo $hpacucli  controller slot=$tmpslot show 
+;;
+bbu)
+sudo $hpacucli  controller slot=$tmpslot show 
+;;
+rate)
+echo "hp raid no this function"
+;;
+setrate)
+echo "hp raid no this function"
+;;
+setcache)
+echo "hp raid no this function"
+;;
+setdiskcache)
+if [ $2 == "enable" ];then
+echo "hp raid no this function"
+elif [ $2 == "disable" ];then
+echo "hp raid no this function"
+fi
+;;
+*)
+print_usage
+;;
+esac
+fi

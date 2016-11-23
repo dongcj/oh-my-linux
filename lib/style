@@ -1,0 +1,465 @@
+## Style Setting
+
+############################# Frame Style #############################
+
+## time format
+NOW_TIME='eval date "+%Y-%m-%d %H:%M:%S"'
+NOW_TIME_PATH='eval date "+%Y%m%d%H%M%S"'
+
+
+
+############################# Dialog Style #############################
+
+# single or batch mode
+INPUT_MODE=single
+
+
+
+############################# Banner Style #############################
+
+
+
+
+
+
+
+############################# Terminal Style #############################
+set -o ignoreeof
+TERM=xterm; export TERM;
+
+[[ "$LANGUAGE" = "cn" ]] && export LANG=en_US.UTF-8  || export LANG=C
+
+FBS_ESC=`echo -en "\033"`
+COLOR_RED="${FBS_ESC}[1;31m"       # Error
+COLOR_GREEN="${FBS_ESC}[1;32m";    # Success
+COLOR_YELLOW="${FBS_ESC}[1;33m"    # Warning
+COLOR_CLOSE="${FBS_ESC}[0m"        # Close
+
+CURSOROFF=`echo -e "\033[?25l"`
+CURSORON=`echo -e "\033[?25h"`
+OLD_STTY_SETTING=$(/bin/stty -g)
+
+BOLD=`tput bold`
+SMSO=`tput smso`
+REV=`tput rev`
+UNDERLINE=`tput smul`
+BLINK=`tput blink`
+NORMAL=`tput sgr0`
+
+
+OUTPUT_WIDTH=70
+
+
+
+######################################################################
+# 作用: 画一条屏幕宽度百分比的直线(默认80%)
+# 用法: Draw_Line <PERCENTAGE>
+# 注意： 
+######################################################################
+Draw_Line() {
+    if [ -z "$1" ]; then
+        percent=80
+    else
+        percent=`echo ${1%%%}`
+        
+        # if num
+        if [ -z "`echo "$percent" | tr -d \[0-9\]`" ]; then
+            
+            # 10#
+            percent=$((10#$percent))
+            
+            # if bigger than 100
+            if [ $percent -gt 100 ]; then
+                percent=100
+            elif [ $percent -lt 0 ]; then
+                percent=0
+            fi
+        else
+
+            Log ERROR "Function Draw_Line() error! Usage: Draw_Line [PERCENTAGE]\n"
+            
+        fi
+    fi
+    
+    
+    echo 
+    SHELL_WINDOW_WIDTH=`tput cols`
+    LINE_WIDTH=`expr $SHELL_WINDOW_WIDTH \* $percent / 100`
+    for ((i=1;i<=${LINE_WIDTH};i++));do
+        echo -n "-"
+    done
+    echo 
+}
+
+
+######################################################################
+# 作用: 画一条指定宽度的直线
+# 用法: Draw_Line <WIDTH> 
+# 注意： 
+######################################################################
+Draw_Line2() {
+
+    echo 
+    for ((i=1;i<=${1};i++));do
+        echo -n "-"
+    done
+    echo 
+}
+
+
+######################################################################
+# 作用: 检测Shell窗口大小,解决文字过大及窗口变小造成变形问题
+# 用法: Probe_Window 
+# 注意： 
+######################################################################
+Probe_Window(){
+
+    AT_LEASE_COLS=86
+    AT_LEASE_LINES=36
+    
+    #/usr/bin/stty rows 40
+    #/usr/bin/stty columns 100
+
+    SHELL_WINDOW_WIDTH=`tput cols`
+    SHELL_WINDOW_HEIGHT=`tput lines`
+
+    #echo "SHELL_WINDOW_WIDTH is $SHELL_WINDOW_WIDTH"
+    #echo "SHELL_WINDOW_HEIGHT is $SHELL_WINDOW_HEIGHT"
+
+    if [ "$SHELL_WINDOW_WIDTH" -lt "$AT_LEASE_COLS" -o "$SHELL_WINDOW_HEIGHT" -lt "$AT_LEASE_LINES" ];then
+        echo
+        echo -n "  please resize your shell window larger than ${AT_LEASE_COLS}x${AT_LEASE_LINES}..waiting.."
+        
+        while true;do
+            SHELL_WINDOW_WIDTH_NEW=`tput cols`
+            SHELL_WINDOW_HEIGHT_NEW=`tput lines`
+            
+            if [ $SHELL_WINDOW_WIDTH_NEW -ne $SHELL_WINDOW_WIDTH -o \
+                $SHELL_WINDOW_HEIGHT_NEW -ne $SHELL_WINDOW_HEIGHT ];then
+                if [ $SHELL_WINDOW_WIDTH_NEW -gt $AT_LEASE_COLS -a \
+                    $SHELL_WINDOW_HEIGHT_NEW -gt $AT_LEASE_LINES ];then
+                    echo "..ok"
+                    break;
+                    
+                else
+                    if [ "$FIRST" = "false" ];then
+                        if [ $((`tput cols | wc -m` + `tput lines | wc -m`)) -eq 5 ];then
+                            echo -e "\b\b\b\b`tput cols`x`tput lines`\c"
+                        elif [ $((`tput cols | wc -m` + `tput lines | wc -m`)) -eq 6 ];then
+                            echo -e "\b\b\b\b\b`tput cols`x`tput lines`\c"
+                        elif [ $((`tput cols | wc -m` + `tput lines | wc -m`)) -eq 7 ];then
+                            echo -e "\b\b\b\b\b\b`tput cols`x`tput lines`\c"
+                        fi
+                        
+                    else
+                        echo -n "${SHELL_WINDOW_WIDTH_NEW}x${SHELL_WINDOW_HEIGHT_NEW}"
+                    fi
+                    
+                    FIRST=false
+                    continue;
+                fi
+            
+            fi
+        done
+    fi
+
+}
+
+
+if [ "$PROBE_SHELL_WINDOW" = "true" -o "$PROBE_SHELL_WINDOW" = "TRUE" ];then
+    if [ -t 0 ] && [ -t 1 ] ; then
+        Probe_Window
+    fi
+fi
+
+
+
+
+
+#############################################################################
+# 作用：指定秒后自动输入指定的文字
+# Auto_Response <SEC> <MSG_TXT>
+# 注意：
+#############################################################################
+Auto_Response(){
+    if [ $# -ne 2 ];then
+        Log ERROR "Function Auto_Response() error! Usage: Auto_Response <SEC> <MSG_TXT>\n"
+
+    else
+        for (( i=1; i<$1; i++ ));do
+            echo -n "$(($1-$i))."
+            sleep 1
+        done
+        
+        echo $2
+    fi
+
+}
+
+
+
+#############################################################################
+# 作用：绘制百分比图, More: deploy.sh --> Install_With_Percentage function
+# Draw_Percentage
+# 注意：
+#############################################################################
+Draw_Percentage(){
+
+    echo -e "\033[?25l"
+    /usr/bin/stty -echo
+    SEPARATOR="|"
+
+    TOTAL_PERCENTAGE=$1
+    TOTAL_PERCENTAGE=${TOTAL_PERCENTAGE%\%}
+    TOTAL_PERCENTAGE=$((10#$TOTAL_PERCENTAGE))
+
+    # 回到光标位 L_ALL_PER和C_ALL_PER,并Draw出百分比
+    NUM_SEPARATOR=`expr $TOTAL_PERCENTAGE / 2`
+    tput cup `expr $L_ALL_PER - 1` $C_ALL_PER
+    
+    for ((i=1;i<=$NUM_SEPARATOR;i++));do
+        echo -n "$SEPARATOR"
+    done
+    
+    # 如果直接在后面写百分比,会造成百分比不对应的假像
+    ## echo " ${TOTAL_PERCENTAGE}%" 
+
+    tput cup `expr $L_ALL_PER_NUM - 1` `expr $C_ALL_PER_NUM - 1`
+    if [ $TOTAL_PERCENTAGE -ge 0 -a $TOTAL_PERCENTAGE -lt 10 ];then
+        TOTAL_PERCENTAGE="  ${TOTAL_PERCENTAGE}"
+    elif [ $TOTAL_PERCENTAGE -ge 10 -a $TOTAL_PERCENTAGE -lt 100 ];then
+        TOTAL_PERCENTAGE=" ${TOTAL_PERCENTAGE}"
+    fi
+        
+    echo "${TOTAL_PERCENTAGE} %"
+
+}
+
+
+######################################################################
+# 作用: 计时器, 根据起止时间算出总时长, 并刷新至相应的坐标上
+# 用法: Time_Setter
+# 注意：时间格式是固定的  date "+%Y-%m-%d %H:%M:%S"
+######################################################################
+Time_Setter() {
+    CURRENT_TIME=`date "+%Y-%m-%d %H:%M:%S"`
+    START_DD=`echo $START_TIME | awk '{print $1}' | cut -d"-" -f3`
+    START_HH=`echo $START_TIME | awk '{print $2}' | cut -d":" -f1`
+    START_MM=`echo $START_TIME | awk '{print $2}'| cut -d":" -f2`
+    START_SS=`echo $START_TIME | awk '{print $2}'| cut -d":" -f3`
+    CURRENT_DD=`echo $CURRENT_TIME | awk '{print $1}'| cut -d"-" -f3`
+    CURRENT_HH=`echo $CURRENT_TIME | awk '{print $2}'| cut -d":" -f1`
+    CURRENT_MM=`echo $CURRENT_TIME | awk '{print $2}'| cut -d":" -f2`
+    CURRENT_SS=`echo $CURRENT_TIME | awk '{print $2}'| cut -d":" -f3`
+
+
+    # 程序已运行时长(分钟)
+    ALREADY_SPENT_TIME=`expr $((86400*10#$CURRENT_DD+3600*10#$CURRENT_HH+60*10#$CURRENT_MM+10#$CURRENT_SS-86400*10#$START_DD-3600*10#$START_HH-60*10#$START_MM-10#$START_SS)) / 60`
+
+    ((ALREADY_SPENT_TIME=$ALREADY_SPENT_TIME < $PROCESS_TOTAL_TIME_ABOUT ? $ALREADY_SPENT_TIME : `expr $PROCESS_TOTAL_TIME_ABOUT - 1`))
+
+
+    if [ "$ALREADY_SPENT_TIME" -ge 0 -a "$ALREADY_SPENT_TIME" -le 9 ];then
+        ALREADY_SPENT_TIME="  ${ALREADY_SPENT_TIME}"
+    elif [ "$ALREADY_SPENT_TIME" -gt 9 -a "$ALREADY_SPENT_TIME" -le 99 ];then
+        ALREADY_SPENT_TIME=" ${ALREADY_SPENT_TIME}"
+    fi
+
+    # 程序剩余时长(分钟)
+    REMAIN_TIME=`expr $PROCESS_TOTAL_TIME_ABOUT - $ALREADY_SPENT_TIME`
+    if [ "$REMAIN_TIME" -ge 0 -a "$REMAIN_TIME" -le 9 ];then
+        REMAIN_TIME="  ${REMAIN_TIME}"
+    elif [ "$REMAIN_TIME" -gt 9 -a "$REMAIN_TIME" -le 99 ];then
+        REMAIN_TIME=" ${REMAIN_TIME}"
+    fi
+
+    # 将程序开始运行时间/已运行时长/剩余时长刷新到坐标上
+    tput cup `expr $L_ALL_PER - 3` `expr $C_ALL_PER + 52`;echo "${START_HH}:${START_MM}:${START_SS}"
+
+    tput cup `expr ${L_SPENT_TIME} - 1` `expr ${C_SPENT_TIME} - 1`;echo "$ALREADY_SPENT_TIME"
+
+    tput cup `expr ${L_REMAIN_TIME} - 1` `expr ${C_REMAIN_TIME} - 1`;echo "$REMAIN_TIME"
+
+}
+
+
+
+#############################################################################
+# 作用：指定秒后自动输入指定的文字
+# Auto_Response <SEC> <MSG_TXT>
+# 注意：
+#############################################################################
+Draw_Header(){
+    echo
+    echo "  |-----------|-----------|-----------|------------|"
+    echo "  0%         25%         50%         75%        100%"
+    # 找到全局百分比坐标值
+    echo -en " ";
+    echo -en "\e[6n";read -sdR pos;pos=${pos#*[};P=${pos/;/ };L_ALL_PER=${P%% *};C_ALL_PER=${P##* }
+
+    echo
+
+    echo
+    echo "  ${BOLD}Current Progress:${NORMAL}"
+
+    # 取得每个需要修改值的坐标
+    echo -n "  1. Percentage........................."
+    echo -en "\e[6n";read -sdR pos;pos=${pos#*[};P=${pos/;/ };L_ALL_PER_NUM=${P%% *};C_ALL_PER_NUM=${P##* }
+    echo
+
+
+    PROCESS_TOTAL_TIME_ABOUT=40
+
+    if [ "$PROCESS_TOTAL_TIME_ABOUT" -ge 0 -a "$PROCESS_TOTAL_TIME_ABOUT" -le 9 ];then
+        PROCESS_TOTAL_TIME_ABOUT="  ${PROCESS_TOTAL_TIME_ABOUT}"
+    elif [ "$PROCESS_TOTAL_TIME_ABOUT" -gt 9 -a "$PROCESS_TOTAL_TIME_ABOUT" -le 99 ];then
+        PROCESS_TOTAL_TIME_ABOUT=" ${PROCESS_TOTAL_TIME_ABOUT}"
+    fi
+
+    echo "  2. Total time.........................${PROCESS_TOTAL_TIME_ABOUT} minute(s)"
+
+    # 已运行时长
+    echo -en "  3. Spent time........................."
+    echo -en "\e[6n";read -sdR pos;pos=${pos#*[};P=${pos/;/ };L_SPENT_TIME=${P%% *};C_SPENT_TIME=${P##* }
+    echo "    minute(s)"
+
+    # 剩余时长
+    echo -en "  4. Remaining time....................."
+    echo -en "\e[6n";read -sdR pos;pos=${pos#*[};P=${pos/;/ };L_REMAIN_TIME=${P%% *};C_REMAIN_TIME=${P##* }
+    echo "    minute(s)"
+    echo
+
+    echo -e "  ${BOLD}Current status:${NORMAL}"
+}
+
+
+Draw_Footer(){
+    echo
+    
+    # 再画一条屏幕宽度90%的直线
+    Draw_Line
+    
+    # 得到最底端坐标值
+    echo -en "\e[6n";read -sdR pos;pos=${pos#*[};P=${pos/;/ };eval L_END=${P%% *}; eval C_END=${P##* }
+}
+
+
+#Draw_Header
+#Draw_Footer
+
+
+
+
+
+#############################################################################
+# 作用：等待时转圈
+# Wheel_Loop 
+# 注意：TODO: not tested
+#############################################################################
+Wheel_Loop(){
+    exec 3>&1
+
+    while true; do
+            for wheel_loop in  - '\'  '|'   '/'; do
+                    wheel_count=`expr $wheel_count + 1`
+                    echo -n "$wheel_loop" 1>&3
+                    echo -en "\b"
+                    usleep 100000
+            done
+    done &
+
+    BG_PID=$!
+    sleep 30
+    kill -PIPE $BG_PID
+    #echo 1>&3
+}
+
+
+
+############################# Yad Style #############################
+
+## gtk default style
+cat > ~/.gtkrc-2.0 <<EOF
+style "timeout-indicator"
+{
+    GtkProgressBar::min-horizontal-bar-height = 5
+    GtkProgressBar::min-vertical-bar-width = 2
+}
+widget "*yad-timeout-indicator" style "timeout-indicator"
+EOF
+
+
+WIDTH=${WIDTH:-666}
+HEIGHT=${HEIGHT:-450}
+TITLE=${YAD_TITLE:-'Ceph_AI_by_dongcj'}
+
+
+#标题栏中的图标
+WINDOW_ICON=${WINDOW_ICON:-'/root/Ceph_AI_GUI/lib/static/dog.ico'}
+# dialog中的图标
+IMAGE=${IMAGE:-'dialog-question'}
+# Theme
+ICON_THEME=Adwaita
+
+# 超时
+TIMEOUT=${TIMEOUT:-100}
+
+# 超时显示
+TIMEOUT_INDICATOR=${TIMEOUT_INDICATOR:-'bottom'}
+
+# 边框
+BODERS=${BORDERS:-2}
+
+# 居中
+CENTER=yes
+#无法调整大小
+FIXED=yes
+# ON ALL desktop
+STICKY=yes
+
+MOUSE=yes
+#最上层
+ON_TOP=yes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### the test style
+<<EOF
+
+# 打印每次返回的信息
+TITLE="--always-print-result --dialog-sep --image=/usr/share/icons/remastersys.png --title="
+
+TITLETEXT="Remastersys USB Startup Disk Tool"
+
+
+TEXT="--text="
+ENTRY="--entry "
+ENTRYTEXT="--entry-text "
+FILESELECTION="--file-selection "
+MENU="--list --column=Pick --column=Info"
+PASSWORD="--entry --hide-text "
+
+# 给yes, no, cancel加标准图标
+YES_NO_CANCEL="--button=gtk-yes:0 --button=gtk-no:1 --button=gtk-cancel:2"
+
+
+WITHLICONS="--licon=/root/Ceph_AI_GUI/lib/static/dog.ico"
+WITHRICONS="--ricon=/root/Ceph_AI_GUI/lib/static/dog.ico"
+
+
+
+
+
+
+EOF

@@ -1,0 +1,1025 @@
+#!/usr/bin/env bash
+#
+# Author: dongcj <ntwk@163.com>
+# description: 全局使用的function放在这里
+#
+
+
+# import Settings
+. ../conf/settings.conf
+
+# import Styles
+. ../lib/style
+
+
+
+######################################################################
+# 作用: 日志记录, 日志记入当前日志文件, 同时集中写入main.log
+# 用法: Log [-n] [LEVEL] <INFORMATION> [ERROR_EXITFLAG]; 
+# ++ -n: 不换行
+# ++ ERROR_EXITFLAG: 如果是no_exit, 即使错误也不退出
+# color: DEBUG:normal  WARN:yellow  ERROR:red  SUCC:green 
+# 注意：DEBUG时只写日志，不屏幕输出; ERROR会退出脚本; 
+######################################################################
+Log() { 
+
+    if [ "$1" = "-n" ]; then
+        local wrap=no
+        local level="$2"
+        local info="$3"
+        local err_exitflag="$4"
+    else
+        local wrap=yes
+        local level="$1"
+        local info="$2"
+        local err_exitflag="$3"
+    fi
+
+    caller=$(basename $0)
+    callerlog=`File_Converter log $0`
+    
+    # 根据不同级别显示不同的颜色
+    case $level in
+        DEBUG)
+            # debug mode
+            if [ "$DEBUG" = "yes" ]; then
+            
+                # only show the main prog log
+                #if Is_TTY; then
+                
+                    # if null message, wrap
+                    if [ -z "$info" ]; then
+                        printf "\n";
+                    else
+                        # if no wrap
+                        if [ "$wrap" = "yes" ]; then 
+                            if [ "$last_wraped" = "no" ]; then
+                            
+                                ### TODO: 平滑滚动进度
+                                # get the last row size
+                                if Is_TTY; then
+                                    echo -en "\e[6n";read -sdR pos;pos=${pos#*[};P=${pos/;/ };eval last_end=${P##* };
+                                    if [ $last_end -lt $OUTPUT_WIDTH ]; then
+                                        for ((i=1; i<=$(($OUTPUT_WIDTH - $last_end)); i++ )); do
+                                            echo -n "."
+                                        done
+                                    fi
+                                    
+                                fi
+                            
+                                printf "$info\n";
+
+                            else
+                                printf "  [$level]: $info\n";
+                                
+                            fi
+                            last_wraped=yes
+                        else
+                            printf "  [$level]: $info...";                            
+                            last_wraped=no
+                        fi
+                    fi
+                #fi
+                
+            fi
+            
+            # log to main
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
+            # log to current log    
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME]\t[$level]\t$info" &>>${callerlog}
+
+        ;;
+        WARN)
+            
+            #if Is_TTY; then
+                printf "  ${COLOR_YELLOW}[$level ]: [!]$info${COLOR_CLOSE}\n"; 
+            #fi
+            
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level ]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME]\t[$level ]\t${COLOR_YELLOW}$info${COLOR_CLOSE}" &>>${callerlog}
+        ;;
+        ERROR)
+            # print to screen
+            echo
+            
+            #if Is_TTY; then
+                if [ "$last_wraped" = "no" ]; then
+                    printf "\n  ${COLOR_RED}[$level]: [X] $info${COLOR_CLOSE}\n"; 
+                else
+                    printf "  ${COLOR_RED}[$level]: [X] $info${COLOR_CLOSE}\n"; 
+                fi
+            #fi
+            
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME]\t[$level]\t${COLOR_RED}$info${COLOR_CLOSE}" &>>${callerlog}
+            
+            
+            # error but not exit
+            if [ "$err_exitflag" = "no_exit" ]; then
+                return 0
+            fi
+            
+            # tty recover
+            if Is_TTY; then
+                /bin/stty "$OLD_STTY_SETTING"
+                tput sgr0
+                /bin/stty erase '^?'
+                echo "${CURSORON}"
+                /bin/stty echo
+            fi
+            
+            ### TODO: Need for a clear way...
+            # 标准输出重定向到标准错误
+            #exec 1>&2
+            if [ "$FUNCNAME" = "Remote_Exec" ]; then
+                echo -e "  More detail: ${UNDERLINE}ssh host tail -50 $THIS_LOG${NORMAL}"
+            else
+                echo -e "  More detail: ${UNDERLINE}tail -50 $THIS_LOG${NORMAL}"
+            fi
+            echo 
+            exit 1
+        ;;
+        SUCC)
+            # print to screen
+            #if Is_TTY; then
+                printf "  ${COLOR_GREEN}[$level ]: [√]$info${COLOR_CLOSE}\n\n"; 
+            #fi
+
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level ]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
+            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME]\t[$level ]\t${COLOR_GREEN}$info${COLOR_CLOSE}" &>>${callerlog}
+        ;;
+
+        *)
+            echo -e "  Function Log() error! Usage: Log [LEVEL] <INFORMATION>\n"
+            exit 250
+        ;;
+    esac
+
+}
+
+
+
+
+######################################################################
+# 作用: 将传入的文件转换为指定后缀名的文件, 请参考 launcher.ini的注释
+# 用法: File_Converter <SUFFIX> </PATH/OF/FILE>
+# 注意：不同的后缀名的文件是在不同的目录里
+######################################################################
+File_Converter() {
+    if [ "$#" -ne 2 ]; then
+        Log ERROR "Function File_Converter() error! Usage: File_Converter <SUFFIX> </PATH/OF/FILE>\n"
+    fi
+    
+    if [ "$1" != "conf" -a "$1" != "log" -a "$1" != "fun" -a "$1" != "run"  -a "$1" \
+    != "out" -a "$1" != "succ" -a "$1" != "fail" ]; then
+        Log ERROR "Function File_Converter() error! SUFFIX can be: \n
+                    [ conf | log | fun | run | out | succ | fail ]\n"
+    fi
+
+    suffix=$1
+    scriptfile=$2
+    
+    scriptname=$(basename $scriptfile)
+    
+    case $suffix in 
+        conf) newfile=${CONF_DIR}/${scriptname%.*}".conf"
+        ;;
+        log)  newfile=${LOG_DIR}/${scriptname%.*}".log"
+        ;;
+        fun)  newfile=${LIB_DIR}/${scriptname%.*}".fun"
+        ;;
+        run)  newfile=${RUN_DIR}/${scriptname%.*}".run"
+        ;;
+        out)  newfile=${RUN_DIR}/${scriptname%.*}".out"
+        ;;  
+        succ) newfile=${RUN_DIR}/${scriptname%.*}".succ"
+        ;;
+        fail) newfile=${RUN_DIR}/${scriptname%.*}".failed"
+        ;;
+    esac
+    
+    echo $newfile
+    return 0
+}
+
+
+
+######################################################################
+# 作用: 检查返回值. 如果上一个命令错误, 则退出并提示错误；如果正常，无提示
+# 用法: Check_Return $0 $LINENO $FUNCNAME (变量不用修改,直接copy!)
+# 注意: 会调用Log ERROR 退出
+######################################################################
+Check_Return() {
+    errorcode=$?
+    
+    if [ $errorcode -eq 0 ]; then
+        return 0
+    fi
+    
+    if ! Checker is_allnum "$2"; then
+        Log ERROR 'Function Check_Return() error! Usage: Check_Return $0 $LINENO $FUNCNAME\n'
+    fi
+        
+    scriptfile=$1
+    lineno=$(($2-1))
+    funcname=${3:-Main}
+
+    detail="
+    Retrun Code=$errorcode
+    Error File=$scriptfile => `File_Converter fun $scriptfile`
+    Error Function=$funcname
+    Error LineNO=$lineno
+    "
+
+    Log ERROR "$detail"
+}
+
+
+
+
+######################################################################
+# 作用: 对纯数字, 纯字母, IP等的检测, 如果类型符合则返回0,否则返回非0
+# 用法: Checker <TYPE> <OBJECT>
+# TYPE: is_ip / is_ip_range / is_hostname / is_encoding /is_allnum / is_domain / is_password
+# 注意: 只返回, 不退出
+######################################################################
+Checker() {
+    if [ "$#" -ne 2 ]; then
+        Log ERROR "Function Checker() error! Usage: Checker <TYPE> <OBJECT>\n"
+    fi
+
+    type=$1
+    object=$2
+    
+    case $type in 
+    
+        is_ip)
+            if ipcalc -c "$object" >/dev/null 2>&1;then
+                return 0
+            else
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            fi
+            
+        ;; 
+        is_ip_range)
+            # can be separate with "," or '|' or '-'
+            if [ `echo "$object" | tr ',|-' ' ' | xargs -n 1 | wc -l` -gt 1 ]; then
+                for i in `echo "$object" | tr ',|-' ' '`; do
+                    if ! ipcalc -c $i >/dev/null 2>&1; then
+                        Log WARN "object \"$object\" is not \"$type\" type"
+                        return 1
+                    fi
+                done   
+            else
+                return 1
+            fi
+        ;; 
+            
+        is_hostname)
+            if [ -n "`echo $object | tr -d '\[a-zA-Z0-9-\]'`" ]; then
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            else
+                return 0
+            fi
+        ;;    
+        
+        is_encoding)
+            [ -f "$object" ] && dos2unix "$object"
+            if file "$object" | grep -qE "UTF-8|ASCII"; then
+                return 0
+            else
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            fi
+        ;; 
+        
+        is_allnum)
+            if [ -z "`echo "$object" | tr -d \[0-9\]`" ]; then
+                return 0
+            else
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            fi
+            
+            # Another method
+            # echo $2 | grep -q '^[-]\?[0-9]\+$' && return 0
+        ;;
+        
+        is_domain)
+            if [ `echo "$object" | xargs -n 1 | wc -l` -ne 1 ]; then
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            fi
+            
+            #only can contain ".[0-9a-zA-Z-]"
+            if [ -n "`echo "$object" | tr -d '.\[0-9a-zA-Z-\]'`" ]; then
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            fi
+            
+            #the domain shout contain at least "xx.xx"
+            if ! echo $object | grep "[0-9a-zA-Z-]\{1,\}\.[0-9a-zA-Z]\{1,\}" >/dev/null 2>&1;then
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            fi
+        ;;
+        
+        is_username)
+            # user name [a-zA-Z0-9-\]
+            if [ -n "`echo $object | tr -d '\[a-zA-Z0-9-\]'`" ]; then
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            else
+                return 0
+            fi
+        ;;
+            
+        is_password)
+            # the password can only contain "[a-z][A-Z][0-9]~!@#$%^&*()_+-="
+            if [ -n "`echo $object | tr -d '\[a-z\]\[A-Z\]\[0-9\]~\!@#$%^&*()_+-='`" ]; then
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            else
+                return 0
+            fi
+        ;;
+        
+        is_shortdomain)
+            # user define short domain, length <4, start with [a-zA-Z1-9-]
+            
+            # only contain [a-zA-Z0-9-]
+            if [ -n "`echo $object | tr -d '\[a-zA-Z0-9-\]'`" ]; then
+                Log WARN "object \"$object\" is not \"$type\" type"
+                return 1
+            fi
+            
+            # length < 4(yes, it is 4, not 5)
+            if [ "`echo $object | wc -c`" -gt 5 ]; then
+                Log WARN "type \"$type\" can only < 4 characters"
+                return 1
+            fi
+            
+            # first must be letter
+            if ! echo $object | grep -q "^[a-zA-Z]" ; then
+                Log WARN "type \"$type\" must be start with [a-zA-Z]"
+                return 1
+            fi
+            
+            return 0
+        ;;
+        *)
+            Log WARN "type \"$type\" does not exist"
+            return 99
+    esac
+
+}
+
+
+######################################################################
+# 作用: 运行命令, 如果正常debug, 如果错误退出
+# 用法: Run <command>
+# 注意: 对于有管道、单引号、双引号的命令，建议不要使用此函数!
+######################################################################
+Run() {
+    if [ -z "$1" ]; then
+        Log ERROR "Function Run() error! Usage: Run <command>\n"
+    fi
+    command=$*
+    Log DEBUG "Run: $command"
+    $command >&/dev/null
+    if [ $? -ne 0 ]; then
+        Log ERROR "command run failed: $command"
+    fi
+
+}
+
+
+######################################################################
+# 作用: 多次运行命令, 如果正常debug, 如果错误退出
+# 用法: Run_More <command>
+# 注意: 对于有管道、单引号、双引号的命令，建议不要使用此函数
+######################################################################
+Run_More() {
+    local retry_count=3
+    local retry_wait=5
+    
+    if [ -z "$1" ]; then
+        Log ERROR "Function Run() error! Usage: Run <command>\n"
+    fi
+    command=$*
+    
+    local m
+    for ((m=1; m<=$retry_count; m++)); do
+        Log DEBUG "Run $m/$retry_count: $command"
+        $command >&/dev/null
+        if [ $? -ne 0 ]; then
+            sleep $retry_wait
+            continue
+        else
+            return 0
+        fi
+
+    done
+    
+    Log ERROR "Max retry count has been exceeded"
+}
+
+######################################################################
+# 作用: 多次执行, 如果成功则成功; 如果不成功则报错; 这个和上面一样的效果
+# 用法: Retry_Exec <COMMAND>
+# 注意：
+######################################################################
+Run_Retry() {
+    local retry_count=3
+    local retry="true"
+    local runcount=0
+    
+    while [ "$retry" = "true" ]; do
+    
+        if [ $runcount -ge $retry_count ]; then
+            Log ERROR "Max retry count has been exceeded"
+        fi
+        
+        command_result=`${*}`
+        returncode=$?
+        let runcount=$runcount+1
+
+        if [ $returncode -ne 0 ]; then
+            Log DEBUG "retry $runcount/$retry_count: \"${*}\"; returncode=$returncode; return=$command_result"
+            retry="true"
+            continue
+        fi
+        
+        retry="false"
+        break
+        
+    done
+
+}
+
+
+######################################################################
+# 作用: 将 key = value 形式的格式文件进行变量直接导入将当前shell
+# 用法: Importer <PATH/OF/FILE>
+# 注意: 解决了中间有空格的问题, 但value中间有空格暂不用解决
+######################################################################
+Importer() {
+    if ! [ -f "$1" ]; then
+        Log ERROR "Function Importer() error! Usage: Importer <FILE_TO_IMPORT>\n"
+    fi
+    
+    local file_to_import=$1
+    
+    if [ -f $file_to_import ];then
+        VARS=`sed "s/[ \t]*=[ \t]*/=/g" $file_to_import`
+        if ! eval "$VARS" >/dev/null 2>&1; then
+            Log ERROR "Import failed, please check the $file_to_import!"
+        else
+            Log DEBUG "import $file_to_import success"
+        fi
+    fi
+
+
+}
+
+
+
+######################################################################
+# 作用: 捕捉用户的中断,即用ctrl+C中断时提示用户,防止误退出
+# 用法: 无须使用 
+# 注意: 无须在各个脚本中调用了，这里已调用了
+######################################################################
+trap TrapProcess 2 3
+TrapProcess() {
+    clear
+    echo
+    echo
+    echo -e "\033[?25h"
+    /bin/stty -igncr
+    /bin/stty echo
+    tput cup `expr $(tput lines) / 2 - 1` `expr $(tput cols) / 2 - 50`
+    echo -n "      Do you really want to quit? \"n\" or \"c\"  to continue, \"y\" or \"q\" to quit : "
+    read -n1 ANS
+    if [ "${ANS}" = "Y" -o "${ANS}" = "y" -o "${ANS}" = "Q" -o "${ANS}" = "q" ];then
+        clear
+        Log ERROR "Exit by user!"
+    else
+        return 0
+    fi
+}
+
+
+
+
+# 作用: Parse Conf文件, 返回指定[SECTION]下的内容
+# 用法: Conf_Parser <CONF_FILE> <SECTION> 
+# 注意：如果是INI格式的，就用INI_Parse; 这个适用于自定义的conf文件
+######################################################################
+Conf_Parser() {
+    if [ "$#" -ne 2 ]; then
+        Log ERROR "Function Conf_Parser() error! Usage: Conf_Parser <CONF_FILE> <SECTION>\n"
+    fi
+    
+    conf_file=$1
+    section=$2
+    
+    if [ ! -f "$conf_file" ]; then
+        Log ERROR "$conf_file not found!\n"
+    fi
+    
+    # get the section from conf file
+    section_content=`grep -v " *#" $conf_file | sed -n "/\[$section\]/,/\[.*\]/p" \
+    | grep -v "\[.*\]" | xargs -n1`
+    
+    if [ -z "$section_content" ]; then
+        Log WARN "zero content of SECTION $section in $conf_file"
+    else
+        echo "$section_content"
+        return 0
+    fi
+}
+
+
+
+
+
+
+######################################################################
+# 作用: 使用 "变量的值" 替换配置文件中的变量
+# 用法: Conf_Replace <CONF_TEMPLATE> <NEW_CONF_FILE> <KEY1> [KEY2]
+# 注意：妈的！ 这个功能做了我大半天, 主要是配置文件中的循环太复杂，后面需要找个更简单点的办法
+######################################################################
+Conf_Replacer() {
+    if [ ! -f $1 ]; then
+        Log ERROR "Function Conf_Replace() error! Usage: Conf_Replace <CONF_TEMPLATE> <NEW_CONF_FILE> <KEY1> [KEY2] ...\n"
+    fi
+    
+    conf_template=$1
+    new_conf_file=$2
+    cp -rLfap $conf_template $new_conf_file
+    
+    mkdir -p $(dirname $new_conf_file)
+    chmod -R 777 $(dirname $new_conf_file)
+    
+    num=0
+    
+    # replace the value 
+    for i in $@; do
+        let num=num+1
+        if [ $num -le 2 ]; then
+            continue
+        fi
+        key=$i
+        value=$(eval echo \$$key)
+        sed -i "s%{{$key}}%$value%" $new_conf_file
+        
+    done
+    
+    ###  Parse the for...end for
+    # 拿到格式如{{for XXXXX}}中的 XXXXX
+    for_ident=`sed -n 's/^ *[^#]{{for \(.*\)/\1/p' ${new_conf_file} | tr -d "}"`
+    array_ident=($for_ident)
+    
+    # The for...end for key use the follow format:
+    # HOST_IP_PORT="host4,ip4,port4 host5,ip5,port5 host6,ip6,port6"
+    # OSD_HOST_IP_PORT="host1,ip1,port1 host2,ip2,port2 host3,ip3,port3"
+    
+    # 临时的写入文件
+    replaced_loop_file=${TMP_DIR}/replaced_loop
+    
+    # loop the $for_ident
+    for i in $for_ident; do
+        rm -rf ${replaced_loop_file}
+        # 拿到名字为$i的块内容
+        this_content_all=`sed -n "/ *{{for $i/,/{{end for}}/p" ${new_conf_file}`
+        # 这个是为了拿行号
+        this_content_nlall=`nl -ba ${new_conf_file} | sed -n "/{{for $i/,/{{end for}}/p"`
+        
+        # 去掉{{for}}和{{end for}}后剩余部分块
+        this_content=`echo "$this_content_all" | grep -Ev '{{for|{{end for}}'`
+        
+        # 拿到i对应的值 a=b, b=c, echo ${!a} => c
+        this_value=${!i}
+        
+        # if $this_value is null, do not replace and delete anything
+        if [ -z "$this_value" ]; then
+            continue
+        fi
+        this_value=($this_value)
+        #echo this_value is ${this_value[*]}
+        for ((j=0; j<=((${#this_value[*]}-1)); j++)); do
+            
+            # 这里将模板中{{0-9}}的变量，转换为变量中的第{{0-9}}个变量, 所以模板中只支持9个变量, 我想够用了!!
+            for k in {1..9}; do eval this_value_part$k=`echo ${this_value[$j]} | awk -F',' '{print $m}' m=$k`; done
+
+            # 手工先实现了再说
+            replaced_loop=`echo "$this_content" | sed "s/{{0}}/${this_value_part1}/" | sed "s/{{1}}/${this_value_part2}/" | \
+             sed "s/{{2}}/${this_value_part3}/" | sed "s/{{3}}/${this_value_part4}/" | sed "s/{{4}}/${this_value_part5}/" | \
+             sed "s/{{5}}/${this_value_part6}/" | sed "s/{{6}}/${this_value_part7}/" | sed "s/{{7}}/${this_value_part8}/"`
+            
+            # replace all the block to its value
+            echo "$replaced_loop" >>${replaced_loop_file}
+        
+
+        done
+        
+
+        ### replace the $new_conf_file
+        # 首先拿到this_content_all的起始行号
+        row_num_begin=`echo "$this_content_nlall" | sed -n '1p' | awk '{print $1}'`
+        row_num_end=`echo "$this_content_nlall" | sed -n '$p' | awk '{print $1}'`
+                
+        # 删除row_num_begin  至  row_num_end的内容
+        sed -i "${row_num_begin},${row_num_end}d" $new_conf_file
+
+        # calc the total row 
+        lastrow=`grep -c "" $new_conf_file`
+        
+        if [ $row_num_begin -le $lastrow ]; then
+            # 在row_num_begin处增加replaced_loop_file中的内容
+            sed -i "${row_num_begin}r $replaced_loop_file" $new_conf_file
+        else
+            sed -i "${lastrow}r $replaced_loop_file" $new_conf_file
+        fi
+
+    done
+    
+    rm -rf ${replaced_loop_file}
+}
+
+
+
+
+######################################################################
+# 作用: 检查ini文件格式是否合规
+# 用法: Conf_Parser <INI_FILE>
+# 注意：
+######################################################################
+INI_Checker() {
+    if [ ! -f $1 ];then
+        Log ERROR "Function INI_Checker() error! File $1 not found!"
+    fi
+
+    ret=$(awk -F= 'BEGIN{valid=1}
+    {
+        # 已经找到非法行,则一直略过处理
+        if(valid == 0) next
+            # 消除所有的空格
+            gsub(" |\t","",$0)
+            # 忽略空行   
+            if(length($0) == 0) next
+                # 检测是否是注释行
+                head_char=substr($0,1,1)
+                if (head_char != "#"){
+                    # 不是字段=值 形式的检测是否是块名
+                    if( NF == 1){
+                        b=substr($0,1,1)
+                        len=length($0)
+                        e=substr($0,len,1)
+                        if (b != "[" || e != "]"){
+                            valid=0
+                        }
+                    }else if( NF == 2){
+                    # 检测字段=值 的字段开头是否是[
+                    b=substr($0,1,1)
+                    if (b == "["){
+                        valid=0
+                    }
+                    # 等号左边一定要有变量名
+                    if (index($0, "=") == 1) {
+                        valid=0
+                    }
+                    
+                }else{
+                # 存在多个=号分割的都非法
+                valid=0
+            }   
+        }
+    }
+    END{print valid}' $1)
+
+    if [ $ret -eq 1 ];then
+        if [ "$2" != "quiet" ]; then
+            Log "DEBUG" "[√][$1] syntax ok"
+        fi
+        return 0
+    else
+        Log "ERROR" "[X] [$1] syntax has error"
+    fi
+}
+
+
+
+######################################################################
+# INI_Parser
+# useage: INI_Parser <INI_FILE> [BLOCKNAME] [FIELDNAME]
+# 如果只指定INI_FILE, 则返回BLOCK列表
+# 如果同时指定INI_FILE+BLOCKNAME, 则返回该BLOCK内容
+# 如果同时指定INI_FILE+BLOCKNAME+FIELDNAME, 则返回该BLOCK下该FIELDNAME的值
+######################################################################
+INI_Parser() {
+    if [ ! -f $1 ] || [ $# -lt 1 ];then
+        Log ERROR "Function INI_Parse() error! Usage: INI_Parser <INI_FILE> [BLOCKNAME] [FIELDNAME]\n"
+    fi
+
+    filename=$1
+    blockname="$2"
+    fieldname="$3"
+    
+    begin_block=0
+    end_block=0
+    
+    # first check ini format
+    #INI_Checker $filename "quiet"
+    
+    # 如果是输出所有的BLOCK列表
+    if [ -z "$blockname" ]; then
+        # get the block
+        blocklist=$(cat $filename | awk '/^[^ *#]/ {print $0}' | awk '/^\[.*\]$/ {print $0}' | tr -d '[]' | xargs)
+        echo $blocklist
+        return 0
+    fi
+    
+
+    cat $filename | while read line; do
+
+        if [ "X$line" = "X[$blockname]" ]; then
+            begin_block=1
+            continue
+        fi
+
+        if [ $begin_block -eq 1 ]; then
+            # 如果找到下一个[BLOCK], 则结束
+            end_block=$(echo $line | awk 'BEGIN{ret=0} /^\[.*\]$/{ret=1} END{print ret}')
+            if [ $end_block -eq 1 ]; then
+                #echo "end block"
+                break
+            fi
+            
+            # 去开头带 " # " 的行和空行
+            need_ignore=$(echo $line | awk 'BEGIN{ret=0} /^ *#/{ret=1} /^$/{ret=1} END{print ret}')
+            if [ $need_ignore -eq 1 ]; then
+                continue
+            fi
+            
+            # key 和 value都可以有空格, 但多个空格或tab会转换为一个空格
+            field=$(echo $line | awk -F= '{print $1}' | xargs)
+            value=$(echo $line | awk -F= '{print $2}' | xargs)
+            #field=$(echo $line | awk -F= '{gsub(" |\t"," ",$1); print $1}')
+            #value=$(echo $line | awk -F= '{gsub(" |\t"," ",$2); print $2}')
+            
+            # 如果是输出整个block内容
+            if [ -z "$fieldname" ]; then
+                echo "$field=$value"
+                continue
+            fi
+            
+            # 如果只输出fieled的值
+            if [ "X$fieldname" = "X$field" ]; then
+                #echo "result value:'$result'"
+                echo "$value"
+                break
+            fi
+        
+        else
+            continue
+        fi
+    done
+    
+    
+    return 0
+}
+    
+
+    
+######################################################################
+# 作用: 检查YAML文件
+# 用法: Yaml_Checker <YAML_FILE>
+# 注意：
+######################################################################
+Yaml_Checker() {
+    :
+    
+    
+    
+}
+
+
+
+
+    
+######################################################################
+# YAML Parser
+# useage: eval $(Yaml_Parser defaults.yml)
+######################################################################
+Yaml_Parser() {
+    local prefix=$2
+    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+    sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+    awk -F$fs '{
+        indent = length($1)/2;
+        vname[indent] = $2;
+        for (i in vname) {if (i > indent) {delete vname[i]}}
+        if (length($3) > 0) {
+            vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+            printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+        }
+    }'
+}
+
+
+
+######################################################################
+# 作用：判断是否在终端执行
+# 用法: Is_TTY 
+# 注意：
+######################################################################
+Is_TTY() {
+    if [ -t 0 ] && [ -t 1 ] ; then
+        return 0
+    else
+        # 
+
+        return 1
+    fi
+}
+ 
+
+
+
+######################################################################
+# 作用: 转变 chapter file 文件状态: running, succ, failed
+# 用法: Turn_ChapterStatus <CHAPTERNAME> <STATUS>
+# 注意：
+######################################################################
+Turn_ChapterStatus() {
+    if [ "$#" -ne 3 ]; then
+        Log ERROR "Function Turn_ChapterStatus() error! Usage: Turn_ChapterStatus <$CHAPTERNAME> <$FUNCNAME>\n"
+    fi
+    
+    if [ "$3" != "running" -a "$1" != "succ" -a "$1" != "failed" ]; then
+        echo -e "   Function TURN_CHAPTERSTATUS() error! STATUS can be: \
+        [ running | succ | failed ]\n"
+        Log ERROR "STATUS can be: [ running | succ | failed ]"
+    fi
+    
+    chaptername=$1
+    funcname=$2
+    status=$3
+    
+    case $status in
+        running)
+            # check the chapter Suffix now
+            nowstatus=
+        ;;
+
+
+    
+    esac 
+}
+    
+# 作用: 转变chapter file 中的单个function的状态: wating, runing, succ, failed
+# 用法: Turn_FunStatus $0
+# 注意：使用时进行了变量的转换，调用的是**变量**，再转为函数
+######################################################################
+Turn_FunStatus() {
+    if [ "$#" -ne 2 ]; then
+        Log ERROR  "   Function Turn_FunStatus() error! Usage: Turn_FunStatus <$0> <$FUNCNAME>\n"
+    fi
+    
+    
+}
+
+
+    
+MK_RunFile() {
+    bsname=$(basename $1)
+    runfile=${bsname%.*}.run
+    donefile=${bsname%.*}.done
+    touch ${RUN_DIR}/$runfile
+    rm -rf ${RUN_DIR}/$donefile
+}
+
+RM_RunFile() {
+    bsname=$(basename $1)
+    runfile=${bsname%.*}.run
+    donefile=${bsname%.*}.done
+    rm -rf ${RUN_DIR}/$runfile
+    touch ${RUN_DIR}/$donefile
+}
+
+
+
+
+# 作用: 根据.run和.done判断是否需要运行此步
+# 用法: Run_Or_Not $0
+######################################################################
+Run_Or_Not() {
+    bsname=$(basename $1)
+    runfile=${bsname%.*}.run
+    donefile=${bsname%.*}.done
+    # 有run无done, 证明
+    if [ -f "${RUN_DIR}/$donefile" ] && [ -n "${RUN_DIR}/$donefile" ]; then
+        echo "需要安装"
+        return 0
+    else
+        echo "不需要安装"
+        return 1
+    fi
+}
+
+
+
+# 作用: 调用函数前: 记日志, 改状态, 设置超时
+# 用法: Func_Starter <$FUNCNAME>
+# 注意：
+######################################################################
+Func_Starter() {
+    if [ "$#" -ne 1 ]; then
+        echo -e "   Function Func_Starter() error! Usage: Func_Starter <$FUNCNAME>\n"
+        $EXIT 250
+    fi
+    
+
+    :
+    
+    # first log to debug level
+    # ### start function $FUNCNAME
+    
+    
+    # change the status to run in chapter files
+
+
+}
+
+
+
+# 作用: 函数运行后
+# 用法: Func_Stoper <$FUNCNAME>
+# 注意：
+######################################################################
+Func_Stoper() {
+    if [ "$#" -ne 1 ]; then
+        echo -e "   Function Func_Stoper() error! Usage: Func_Starter <$FUNCNAME>\n"
+        $EXIT 250
+    fi
+    :
+
+    
+    # get the return status 
+    
+    # change the status to succ in chapter files
+    
+    
+    # last log to debug level
+    # ### success function funcname.
+}
+
+
+
+# 作用传入当前的脚本名，得到上一步和下一步要运行的脚本
+# 用法: Get_Script_Name $0
+##    current: scriptname
+##    next: scriptname
+##    previous: scriptname
+######################################################################
+Get_Script_Name() {
+    current_file="$(basename $1)"
+    
+    if [ "$2" = "current" ]; then
+        return 0
+    fi    
+    
+    if [ "$2" = "next" ]; then
+        chapter_nl_list=`sed -n '/^ *#/!p' ${CONF_DIR}/LAUNCHER | grep "^\[" | tr -d "[]" | nl | xargs -n2`
+        # if has current, the current is 
+        in=`basename $1`
+        if [ `echo $chapter_nl_list | grep " ${in%/.*}"`; then
+            echo "current: $in"
+        else
+            echo "current not found"
+            Exit $0
+        fi    
+        
+        nl_current=`echo $chapter_nl_list | grep ${current_file%.*} | awk '{print $1}'`
+        nl_next=`expr $nl_current + 1`
+        next=`echo $chapter_nl_list | grep "^nl_next"`
+        # 拿到在
+        next=`sed -n '/^ *#/!p' ${CONF_DIR}/LAUNCHER | grep "^\[" | tr -d "[]" | grep ${current_file%.*}`
+         
+        return 0
+    fi    
+
+
+}
+
+
+
+
+
+
+

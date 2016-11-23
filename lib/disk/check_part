@@ -1,0 +1,196 @@
+#!/bin/sh
+#用于格式化除了系统盘以外的所有分区，如/dev/sdb、/dev/sdc等
+#参数说明：
+#   用法：disk_part 'ext4' '/disk' 'defaults,noatime' 'admin:admin'
+disk_part_panshi(){
+    fstype=$1
+    mount_prefix=$2
+    mount_option=$3
+    diskuser=$4
+
+    #如果是RHEL5，mkfs.ext4是默认没有的，需要安装e4fsprogs
+    [[ "$fstype" == "ext4" ]] && which mkfs.ext4 || yum -y install e4fsprogs
+    myNEWMOUNT="/var/log/auto-partition.mounts"
+    myPARTITIONSHELL="/var/log/auto-partition.sh"
+    myPARTITIONDEV="/var/log/auto-partition.dev"
+    myPARTITIONPID="/var/log/auto-partition.pid"
+    cat /dev/null > ${myPARTITIONDEV}
+    cat /dev/null > ${myPARTITIONPID}
+    # 找到需要格式化的磁盘
+    for device in `fdisk -l 2>/dev/null | grep ^Disk | grep -v identifier | grep -v '/dev/mapper' | grep -v '/dev/md' | awk '{print $2}' | sort | cut -d: -f1`;do
+        if grep -iq "${device}" /etc/fstab || mount | grep -iq "${device}" ; then
+            continue
+        fi
+        device_id=`echo ${device} | sed 's#/dev/##g'`
+        if grep "${device_id}[p1-9]\[[0-9]\]" /proc/mdstat ; then
+            continue
+        fi
+        parted -s $device rm 1 &>/dev/null
+        label_type='msdos'
+        total_size=`parted -s $device print 2>/dev/null | grep ^Disk | awk -F: '{print $2}' | sed 's/[ \t]\{1,\}//g'`
+        [[ $total_size == '' ]] && total_size=`fdisk -l $device 2>/dev/null | grep ^Disk | grep /dev | awk '{printf("%d %s",$3,$4)}'| sed 's/,//g'`
+        if echo $total_size | grep -q GB ; then
+            total_size_num=`echo $total_size | sed 's/GB//g' | awk '{printf("%d",$0)}'`
+            [ $total_size_num -gt 2200 ] && label_type='gpt'
+        elif echo $total_size | grep -q TB ; then
+            label_type='gpt'
+        fi
+        parted -s $device mklabel $label_type
+        parted -s $device mkpart primary 0% 100%
+        partprobe $device &>/dev/null
+        sleep 6
+        if echo $device | grep -q 'cciss' ; then
+                echo "${device}p1" >> ${myPARTITIONDEV}
+        else
+                echo "${device}1" >> ${myPARTITIONDEV}
+        fi
+    done
+    cat ${myPARTITIONDEV} && sleep 5
+    # 并行格式化磁盘
+    i=1
+    echo "#!/bin/bash" > ${myPARTITIONSHELL}
+    echo "" > ${myNEWMOUNT}
+    for myPARTITION in `cat ${myPARTITIONDEV}`;do
+        mkfs.${fstype} -q -m 0 -L disk${i} -O bigalloc -I 128 ${myPARTITION} &
+        echo $! >> ${myPARTITIONPID}
+        echo "${mount_prefix}${i}" >> ${myNEWMOUNT}
+        cat >> ${myPARTITIONSHELL} <<-EOF
+mkdir -p ${mount_prefix}${i}
+#cat "/etc/fstab" 2>/dev/null|grep "${mount_prefix}${i} " || \
+#echo -e "LABEL=disk${i}    ${mount_prefix}${i}    ${fstype}    ${mount_option}  0 0" >> /etc/fstab
+#echo "LABEL=disk1    /apsarapangu/disk1    ext4    defaults,noatime,nodiratime,dioread_nolock 1 2" >> /etc/fstab
+EOF
+        let i++
+    done
+    # 等待格盘结束
+    if [ -f ${myPARTITIONPID} ]; then
+        for pid in `cat ${myPARTITIONPID}`; do
+            wait $pid
+        done
+        rm -f ${myPARTITIONPID}
+    fi
+    bash ${myPARTITIONSHELL}
+    mount -a
+    for i in `cat $myNEWMOUNT`
+    do
+        chown -R $diskuser $i
+    done
+}
+
+
+
+check_part()
+{
+    local info="$1"
+    local comand="$2"
+    local prefix="$info part => "
+    local os_ver="NULL"
+    local snapshot="10" #GB,parted only support ini
+    local apsarapangu="50" #GB,parted only support ini
+
+    echo "${prefix}------------------------------------------------$(date)"
+    [ -f "${HOME_DIR}/../public/functions.sh" ] || \
+        { echo "${prefix}[FAILED] - ${HOME_DIR}/../public/functions.sh not a file";return 1; }
+
+    case $info in
+        install)
+            local rootdisk=$(df | grep -w '/' | awk '{print $1}' | sed -e 's/[1-9][0-9]*$//g' -e 's/p$//g')
+            local extended_start=$(parted -s "$rootdisk" print|awk '/extended/{printf "%.0f",$2}')
+            local extended_end=$(parted -s "$rootdisk" print|awk '/extended/{printf "%.0f",$3}')
+            #clean all logical
+            echo "${prefix}clean all logical part in $rootdisk"
+            umount -lv /apsarapangu/disk*
+            for i in $(parted -s "$rootdisk" print|awk '$5 ~ /logical/{print $1}'|sort -nr);do
+                echo parted -s "$rootdisk" rm "$i"
+                umount -lv "${rootdisk}$i"
+                parted -s "$rootdisk" rm "$i"
+            done
+            partprobe "$rootdisk"
+            sleep 6
+            #apsarapangu
+            local start=$((extended_start+1))
+            local end=$((start + apsarapangu))
+            echo "${prefix}part /apsarapangu start:$start end:$end extended_end:$extended_end"
+            sed  -i '/ \/apsarapangu /d' /etc/fstab 
+            if [[ $(echo "$extended_end  > $end"|bc) = 1 ]];then
+                echo parted -s "$rootdisk"  mkpart logical "$start"G "$end"G
+                parted -s "$rootdisk"  mkpart logical "$start"G "$end"G
+                cat "/etc/fstab" 2>/dev/null|grep " /apsarapangu " || \
+                echo "LABEL=/apsarapangu      /apsarapangu            ext4    defaults        1 2" >> /etc/fstab
+            fi
+            #snapshot
+            local start=$((end+1))
+            local end=$((start + snapshot))
+            echo "${prefix}part /snapshot start:$start end:$end extended_end:$extended_end"
+            sed  -i '/ \/snapshot /d' /etc/fstab 
+            if [[ $(echo "$extended_end  > $end"|bc) = 1 ]];then
+                echo parted -s "$rootdisk"  mkpart logical "$start"G "$end"G
+                parted -s "$rootdisk"  mkpart logical "$start"G "$end"G
+                cat "/etc/fstab" 2>/dev/null|grep " /snapshot " || \
+                echo "LABEL=/snapshot      /snapshot            ext4    defaults        1 2" >> /etc/fstab
+            fi
+            #disk1
+            local start=$((end+1))
+            local end="$extended_end"
+            echo "${prefix}part /disk1 start:$start end:$end extended_end:$extended_end"
+            sed  -i '/ \/disk1 /d' /etc/fstab 
+            if [[ $(echo "$end  > $start"|bc) = 1 ]];then
+                echo parted -s "$rootdisk"  mkpart logical "$start"G "$end"G
+                parted -s "$rootdisk"  mkpart logical "$start"G "$end"G
+                cat "/etc/fstab" 2>/dev/null|grep " /disk1 " || \
+                echo "LABEL=disk1         /home/t4               ext4    defaults,noatime,nodiratime        1 2" >> /etc/fstab
+                test -d /home/t4 || mkdir /home/t4
+            fi
+            #mkfs ext4
+            partprobe "$rootdisk"
+            sleep 6
+            local count=1
+            for i in $(parted -s "$rootdisk" print |awk '$5 ~ /logical/{print $1}' |sort -n);do
+                echo "${prefix} $count ${rootdisk}$i"
+                [[ $count -eq 1 ]] && mkfs.ext4 -q -m 1 -L /apsarapangu "${rootdisk}$i"
+                [[ $count -eq 2 ]] && mkfs.ext4 -q -m 1 -L /snapshot "${rootdisk}$i"
+                [[ $count -eq 3 ]] && mkfs.ext4 -q -m 1 -L disk1 "${rootdisk}$i"
+                local count=$((++count))
+            done
+            #mkdir, chown and mount
+            echo "${prefix}mkdir, chown and mount"
+            for i in $(echo /apsarapangu /snapshot);do
+                echo "${prefix} mkdir -m 755 -p $i and mount LABEL=$i"
+                umount -lv "$i"
+                mkdir -m 0755 -p "$i" && mount LABEL="$i"
+                [[ "$i" == "/apsarapangu" ]] && mkdir -m 0755 -p "/apsarapangu/backup"
+                df 2>/dev/null|grep -w "$i$"
+                chown admin:admin -R "$i"
+            done
+            mkdir -m 0755 -p /apsara
+            mkdir -m 0755 -p /apsarapangu/disk1
+            chown admin:admin -R /apsarapangu/disk1
+            mount LABEL=disk1
+            #mkfs diskX
+            echo "${prefix} disk_part_panshi 'ext4' '/apsarapangu/disk' 'defaults,noatime,nodiratime 1 2' 'admin:admin'"
+            sed -i '/ \/apsarapangu\/disk[1-9][0-9]* /d' /etc/fstab
+            disk_part_panshi 'ext4' '/apsarapangu/disk' 'defaults,noatime,nodiratime' 'admin:admin'
+#            sed -i '/ \/apsarapangu\/disk[1-9][0-9]* /d' /etc/fstab
+#                   echo "LABEL=disk1    /apsarapangu/disk1    ext4    defaults,noatime,nodiratime,dioread_nolock 1 2" >> /etc/fstab
+            ;;
+        check)
+            for i in $(echo /apsarapangu /apsara);do
+                echo "${prefix}check $i"
+                            cat "/etc/fstab" 2>/dev/null|grep " $i " || \
+                echo "${prefix}[FAILED] - can't find $i in /etc/fstab"
+                            df 2>/dev/null|grep -w "$i$" || \
+                echo "${prefix}[FAILED] - can't find $i in df"
+                            ls -la "$i"|grep  ' \.$'|grep -qw admin || \
+                echo "${prefix}[FAILED] - $i owner not admin"
+            done
+
+            echo "${prefix} /apsarapangu/diskX num"
+            local mounted_disk=$(df |grep -i /apsarapangu/)
+            echo -e "${prefix} mounted_disk: \n$mounted_disk"
+        #    echo "$mounted_disk"|wc -l|egrep -qw '11|5' || \
+        #    echo "${prefix}[FAILED] - echo \"\$mounted_disk\"|wc -l|egrep -qw '11|5' failed"
+            ;;
+        *)
+            echo "${prefix}[FAILED] - unsupport info";;
+    esac
+}

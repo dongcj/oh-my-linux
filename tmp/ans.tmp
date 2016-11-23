@@ -1,0 +1,10 @@
+    FULL_DOMAIN=asdaf.cxx
+    SHORT_DOMAIN=dxa1
+    tmphost1="01|192.168.120.245|root|shencloud"
+    tmphost2="01|192.168.120.244|root|password"
+    tmphost3="01|192.168.130.10|root|password"
+
+    cluste_network="192.168.88.0/255.255.255.0"
+    mon_selection="1,2,3"
+    osd_selection="1-2"
+    mds_selection="2-3"

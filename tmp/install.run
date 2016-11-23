@@ -1,0 +1,27 @@
+# ANS file
+
+
+[domain]
+    FULL_DOMAIN="shencloud.org"
+    SHORT_DOMAIN="sc"
+
+
+
+# 注意: 密码中不能带"|", 否则解析会有问题
+# 生成这份配置的时候, 防止主机名过长, 限制数据中心和机架名称长度
+# 数据中心|机架|Public IP|Cluster IP|用户|密码
+[host]
+    sc1r01n01="dc1|rack01|192.168.120.245,255.255.255.0,192.168.120.1,[dns1,dns2]|192.168.88.245,255.255.255.0|root|shencloud"
+    sc1r02n02="dc1|rack02|192.168.120.246,255.255.255.0,192.168.120.1,[dns1,dns2]|192.168.88.245,255.255.255.0|root|shencloud"
+    #sc1r03n03="dc1|rack03|192.168.120.247,255.255.255.0,192.168.120.1,[dns1,dns2]|192.168.88.245,255.255.255.0|root|shencloud"
+
+
+
+# Role info
+[role]
+    MON="sc1r01n01"
+    OSD="sc1r01n01"
+    MDS="sc1r01n01 sc1r02n02"
+
+
+

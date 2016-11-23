@@ -1,0 +1,68 @@
+[system]
+    SYSTEM_MANUFACTURER="Intel Corporation"
+    SYSTEM_PRODUCTNAME="S2600CP"
+    SYSTEM_SERIALNUMBER="............"
+    SYSTEM_UUID="E4489C68-D355-E311-B5A4-001E67A34862"
+    
+[os]
+    OS_DISTRIBUTION="CentOS Linux"
+    OS_FAMILY="Linux"
+    OS_VERSION="7.2.1511"
+    OS_ARCH="x86_64"
+    OS_HOSTNAME="sc1r01n01"
+    OS_HOSTID="a8c0f578"
+
+[cpu]
+    CPU_PHYSICAL=2
+    CPU_CORE=12
+    CPU_THREAD=24
+    CPU_SPEED=2307
+    CPU_FAMILY=Intel
+    CPU_MODELNAME="Intel(R) Xeon(R) CPU E5-2630 v2 @ 2.60GHz"
+
+[mem]
+    MEMORY_TOTAL=80
+    MEMORY_FREE=40
+    MEMORY_SLOT=16
+    MEMORY_NUMBER=5
+    MEMORY_SPEED="1333"
+    
+
+[disk]
+    DISK_LIST="sda sdb sdc sdd sde sdf sdg sdh"
+    DISK_PATH="/dev/sda /dev/sdb /dev/sdc /dev/sdd /dev/sde /dev/sdf /dev/sdg /dev/sdh"
+    # note: disk size get from disk information, not disk capacity
+    # use disk capacity when you format disk(eg: lsblk)
+    DISK_SIZE="sda:1000 sdb:1000 sdc:1000 sdd:1000 sde:1000 sdf:1000 sdg:480 sdh:480"
+    DISK_COUNT=8
+    DISK_ROOT="sda"
+    DISK_BOOT="sda"
+    DISK_ROOTTYPE="lvm"
+    DISK_RAIDCARD="LSI Logic / Symbios Logic MegaRAID SAS 2108 [Liberator] (rev 05)"
+    DISK_ROOTSIZE=1000
+    DISK_INLVM_RAID=""
+    DISK_ISINRAID="sda:1 sdb:1 sdc:1 sdd:1 sde:1 sdf:1 sdg:1 sdh:1"
+    DISK_MOUNTED="sda sdb sdc sdd sde sdf sdg sdh"
+    DISK_ROTATION_RATE_LIST="/dev/sda:'Hard Disk Device' /dev/sdb:'Hard Disk Device' /dev/sdc:'Hard Disk Device' /dev/sdd:'Hard Disk Device' /dev/sde:'Hard Disk Device' /dev/sdf:'Hard Disk Device' /dev/sdg:'Solid State Device' /dev/sdh:'Solid State Device'"
+    DISK_SATA="sda sdb sdc sdd sde sdf"
+    DISK_SSD="sdg sdh"
+    
+
+    
+[network]
+    NETWORK_PCIETHER_COUNT=4
+    NETWORK_PCIETHER_1G_COUNT=2
+    NETWORK_PCIETHER_1G_BRAND="Intel Corporation I350 Gigabit (rev 01)"
+    NETWORK_PCIETHER_10G_COUNT=2
+    NETWORK_PCIETHER_10G_BRAND="Intel Corporation 82599ES 10-Gigabit SFI/SFP+ (rev 01)"
+    NETWORK_ALLETHERS="enp8s0f0 enp8s0f1 ens4f0 ens4f1 br0 virbr0 virbr0-nic vnet0"
+    NETWORK_PHYETHERS="enp8s0f0 enp8s0f1 ens4f0 ens4f1"
+    NETWORK_PHYETHERS_INFO="enp8s0f0,00:1e:67:a3:48:62,1000Mb/s,yes enp8s0f1,00:1e:67:a3:48:63,1000baseT,no ens4f0,00:1b:21:bb:ce:44,10000baseT,no ens4f1,00:1b:21:bb:ce:46,10000Mb/s,yes"
+    NET_USE_ETHER="br0"
+    NET_USE_ETHER_TYPE=bridge
+    NETWORK_IPADDR="192.168.120.245"
+    NETWORK_IPMASK="255.255.255.0"
+    NETWORK_GATEWAY="192.168.120.1"
+    NETWORK_DNS="202.96.134.133"
+    NETWORK_DOMAIN="shencloud.com"
+

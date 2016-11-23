@@ -1,0 +1,134 @@
+#!/bin/bash
+#
+# networkirq         Network Irq Affinity
+#
+# chkconfig: 2345 95 95
+# description:  change network irq affinity.
+
+. /etc/init.d/functions
+
+RETVAL=0
+prog="networkirq"
+lockfile=/var/lock/subsys/$prog
+
+irqbind_init() {
+    #网卡数组
+    net_dev=(`for dev in /sys/class/net/*/device ; do awk -F/ '{print $5}' <<< ${dev} ; done`)
+    [ "${#net_dev[@]}" = 0 ] && { echo "bindirq() error, Can not get the nics"; exit 1; }
+    
+    #激活网卡IRQ数组
+    net_irq=(`for i in ${net_dev[@]} ; do awk '/'${i}'-/{print $1}' /proc/interrupts | sed 's/[: ]//g' ; done`)
+
+    #IRQ与网卡的对应关系
+    irq_net=(`for i in ${net_irq[@]} ; do awk '/ '${i}':/{print $NF}' /proc/interrupts ; done`)
+    
+    #激活网卡队列数
+    net_q=${#net_irq[@]}
+    [ "$net_q" = 0 ] && { echo "bindirq() error, Can not get the nic queue"; exit 1; }
+    
+    #处理器核数
+    cpu_n=`grep -c processor /proc/cpuinfo`
+    [ "$cpu_n" = 0 ] && { echo "bindirq() error, Can not get the cpu"; exit 1; }
+    
+    #网卡中断在核上的次数
+    m=0
+    for irq in ${net_irq[@]}; do
+        net_irq_hit[m]=$( for((i=0;i<cpu_n;i++)) ; do awk -v n=$((i+2)) '/ '$irq':/{print $n}' /proc/interrupts; done | sort -rn | head -1 )
+        ((m++))
+    done
+
+    #处理器掩码
+    cpu_mask_bin=`for((i=0;i<cpu_n;i++));do echo -n '1';done`
+    cpu_mask_hex=`echo "obase=16;ibase=2; $cpu_mask_bin"|bc`
+}
+
+start() {
+    echo -n $"Starting $prog: "
+    RETVAL=0
+    #绑定法则
+    #中断号数组下标%处理器核数，求余，为CPU编号m
+    for((i=0;i<net_q;i++)) ; do
+        irq=${net_irq[i]}
+        echo $cpu_mask_hex > /proc/irq/$irq/smp_affinity
+        m=$((i % cpu_n))
+        cpu=`echo -n '1'; for((n=0;n<m;n++)); do echo -n '0' ; done`
+        smp_affinity=`echo "obase=16;ibase=2; $cpu" | bc`
+        echo $smp_affinity > /proc/irq/$irq/smp_affinity
+    done
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && touch $lockfile && success || failure
+    echo
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stoping $prog: "
+    RETVAL=0
+    for((i=0;i<net_q;i++)) ; do
+        irq=${net_irq[i]}
+        echo $cpu_mask_hex > /proc/irq/$irq/smp_affinity
+    done
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f $lockfile && success || failure
+    echo
+    return $RETVAL
+}
+
+show() {
+   # 显示当前情况
+   for i in /proc/net/bonding/*bond* ; do
+       echo ----------------------
+       echo "`basename $i` -> "
+       grep Interface $i
+       echo ----------------------
+   done
+   echo "nic_queue irq smp_affinity irq_count"
+   for((i=0;i<net_q;i++)) ; do
+       irq=${net_irq[i]}
+       smp_affinity=$(</proc/irq/$irq/smp_affinity)
+       echo ${irq_net[i]} ${net_irq[i]} ${smp_affinity} ${net_irq_hit[i]}
+   done | column -t
+}
+
+status() {
+    if [ -f $lockfile ] ; then
+        echo "$0 is runed."
+        return 0
+    else
+        echo "$0 is not runed."
+        return 1
+    fi
+}
+
+usage() {
+    echo "Usage: $0 {start|stop|status|show}"
+    exit 1
+}
+
+#main()
+case "$1" in
+  start)
+        irqbind_init
+	start
+        ;;
+  stop)
+        irqbind_init
+        stop
+        ;;
+  restart)
+        irqbind_init
+        stop
+        start
+        ;;
+  status)
+        status
+        ;;
+  show)
+        irqbind_init
+        show
+        ;;
+  *)
+        usage
+        ;;
+esac
+

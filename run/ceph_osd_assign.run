@@ -1,0 +1,30 @@
+[sc1r01n01]
+    osd_number = 0-4
+    osd_data_disk = "sdb sdc sdd sde sdf"
+    osd_journal_disk = "sdh"
+    
+    diskmode = standalone
+    
+    user_define_data = false
+    user_define_journal = false
+    user_define_exclude = true
+    user_define_disk_primary = false
+    
+    auto_disk_primary = ""
+
+[sc1r02n02]
+    osd_number = 5-9
+    osd_data_disk = "sdb sdc sdd sde sdf"
+    osd_journal_disk = "sdh"
+    
+    diskmode = standalone
+    
+    user_define_data = false
+    user_define_journal = false
+    user_define_exclude = false
+    user_define_disk_primary = false
+    
+    auto_disk_primary = ""
+
+[add-more-osd]
+    osd_number_start_next = 10

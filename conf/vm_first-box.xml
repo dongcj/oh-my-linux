@@ -1,0 +1,66 @@
+<domain type="kvm">
+  <name>firstbox</name>
+  <memory unit="MiB">4096</memory>
+  <currentMemory unit="MiB">4096</currentMemory>
+  <vcpu current="1">2</vcpu>
+  <os>
+    <type arch="x86_64" machine="pc">hvm</type>
+    <!--
+    <boot dev="cdrom"/>
+    -->
+    <boot dev="hd"/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <clock offset="utc"/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    <disk device="disk" type="file">
+      <driver cache="none" name="qemu" type="qcow2"/>
+      <source file="/kernels/first-box.img"/>
+      <target dev="vda"/>
+    </disk>
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='/kernels/ubuntu-12.04.4-server-amd64.iso'/>
+      <target dev="hda"/>
+      <readonly/>
+    </disk>
+    <disk type='file' device='cdrom'>
+      <driver name='qemu' type='raw'/>
+      <source file='/kernels/ubuntu-14.04.3-server-amd64.iso'/>
+      <target dev="hdb"/>
+      <readonly/>
+    </disk>
+    <input bus="ps2" type="mouse"/>
+    <interface type="bridge">
+      <source bridge="br0"/>
+      <model type="virtio"/>
+    </interface>
+    <!--interface type="bridge">
+      <source bridge="br1"/>
+      <model type="virtio"/>
+    </interface-->
+
+    <serial type='pty'>
+      <target port='0'/>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+
+    <graphics autoport="yes" listen="0.0.0.0" port="-1" tlsPort="-1" type="vnc">
+      <listen address="0.0.0.0" type="address"/>
+    </graphics>
+    <video>
+      <model heads="1" type="cirrus" vram="9126"/>
+    </video>
+    <memballoon model="virtio"/>
+  </devices>
+</domain>

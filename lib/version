@@ -1,0 +1,16 @@
+
+    Ceph_AI - Copyright(C) 2016 DongCJ <ntwk@163.com>
+
+        Ceph_AI version: v0.2.xxx
+        Ceph version: v10.2.2
+        Ceph release name: jewel
+    
+        Publish code name: Ceph_AI.tar.gz
+        Publish code md5 : THIS_IS_MD5_SUM
+    
+        OS requirment: CentOS 7 x64
+        Fullly tested ISO name: CentOS-7-x86_64-DVD-*.iso
+        ISO download: http://buildlogs.centos.org/rolling/7/isos/x86_64/
+
+    opensource on github: https://github.com/dongcj/Ceph_AI.git
+

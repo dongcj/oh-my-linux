@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# changeDevice      change eth0 to slave0,eth1 to slave1,bond0 to eth0
+#
+# chkconfig: 2345 11 2 
+# description:  Change network device name
+GATEWAY=`cat /etc/sysconfig/network | /bin/grep -v "^#" | /bin/grep -i gateway | cut -f2 -d= | cut -f2 -d\"`
+i=-1
+case "$1" in
+  start)
+        /sbin/ifconfig bond0 down
+        /sbin/ifconfig eth0 down
+        /sbin/ifconfig eth1 down
+
+        if [ -f /etc/sysconfig/bonding_mac ];then
+            mac=`cat /etc/sysconfig/bonding_mac`
+            if [ "$mac" == "eth0" ];then
+                i=0
+            elif [ "$mac" == "eth1" ];then
+                i=1
+            fi
+        fi
+
+        if [ $i -eq -1 ]; then
+            let i=$RANDOM%2
+        fi
+
+        echo -eth1 > /sys/class/net/bond0/bonding/slaves
+        echo -eth0 > /sys/class/net/bond0/bonding/slaves
+
+        if [ $i -eq 1 ]; then
+            echo +eth1 > /sys/class/net/bond0/bonding/slaves
+            echo +eth0 > /sys/class/net/bond0/bonding/slaves
+        elif [ $i -eq 0 ]; then
+            echo +eth0 > /sys/class/net/bond0/bonding/slaves
+            echo +eth1 > /sys/class/net/bond0/bonding/slaves
+        fi	
+
+        /sbin/ifconfig eth0 down
+        /sbin/ifconfig eth1 down
+
+        /sbin/ip link set eth0 name slave0
+        /sbin/ip link set eth1 name slave1
+        /sbin/ip link set bond0 name eth0
+
+        /sbin/ifconfig slave0 up
+        /sbin/ifconfig slave1 up
+        /sbin/ifconfig eth0 up
+
+        /sbin/route add default gw ${GATEWAY}
+        echo eth$i > /etc/sysconfig/bonding_mac
+        ;;
+  stop)
+        /sbin/ifconfig eth0 down
+        /sbin/ifconfig slave0 down
+        /sbin/ifconfig slave1 down
+	
+        /sbin/ip link set eth0 name bond0
+        /sbin/ip link set slave0 name eth0
+        /sbin/ip link set slave1 name eth1
+
+        /sbin/ifconfig bond0 up
+        /sbin/ifconfig eth0 up
+        /sbin/ifconfig eth1 up
+
+        /sbin/route add default gw ${GATEWAY}
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop}"
+esac

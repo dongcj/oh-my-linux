@@ -1,0 +1,48 @@
+## global setting effets all of the hosts
+## if all of the servers use the same disk structure, edit [global] will be a easy way
+[global]
+
+
+    # do not use the follow disk 
+    # if disk in exclude list and also in data|journal disk list, it is always excluded
+    disk_exclude = "sdg"
+
+
+
+    # use the follow disk as the data disk
+    disk_data = ""
+
+
+
+    # use the follow disk as the journal disk
+    # one disk only now, or you can define it as same as disk_data
+    disk_journal = ""
+
+
+
+    # define the "PRIMARY AFFINITY" disk
+    # high speed ssd / stable / big enough size disks are recommand
+    # if define, it will auto add to disk_data and use as "master of replicator"
+    disk_primary_affinity = ""
+    
+
+
+## For a special host, you can define it's own disk structure spearatly 
+[sc1r01n01]
+
+    disk_exclude = "sdg"
+    
+
+    disk_data = ""
+
+
+    disk_journal = ""
+
+    
+    disk_primary_affinity = ""
+    
+
+    
+[sc1r02n02]
+    
+    disk_exclude = ""

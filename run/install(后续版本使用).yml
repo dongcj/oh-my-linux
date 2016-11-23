@@ -1,0 +1,68 @@
+domain:
+  fulldomain: shencloud.com
+  shortdomain: sc
+  
+host:
+  - sc1r01n01:
+    datacenter: dc01
+    rack: r01
+    username: root
+    password: shencloud
+    disk: 
+      sata:
+        - sda
+        - sdb
+      ssd:
+        - sdg
+        - sdh
+    role: 
+      - mon
+      - osd
+      - mds
+      
+      
+    publicnetwork:
+      ether:  eth0
+      speed: 1000
+      ipaddr: 192.168.120.245
+      netmask: 255.255.255.0
+      gateway: 192.168.120.1
+      dns: 
+        - 192.168.120.1
+        - 192.168.120.247
+      
+
+    localnetwork:
+      ether:  firb0
+      speed: 10000
+      ipaddr: 192.168.88.245
+      netmask: 255.255.255.0
+      
+  - sc1r02n02:
+    datacenter: dc01
+    rack: r02
+    username: root
+    password: shencloud
+    role: 
+      - mon
+      - osd
+      - mds
+      
+    publicnetwork:
+      ether:  eth0
+      speed: 1000
+      ipaddr: 192.168.120.245
+      netmask: 255.255.255.0
+      gateway: 192.168.120.1
+      dns: 
+        - 192.168.120.1
+        - 192.168.120.247
+      
+
+    localnetwork:
+      ether:  firb0
+      speed: 10000
+      ipaddr: 192.168.88.245
+      netmask: 255.255.255.0
+    
+    

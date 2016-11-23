@@ -1,0 +1,22 @@
+[osd0]
+    # part & size
+    data=/dev/sdb1
+    data_size=980
+    data_partlabel=osd-device-0-data
+    journal=/dev/sdb2
+    journal_size=20
+    journal_partlabel=osd-device-0-journal
+    
+    # filesystem
+    fstype=xfs
+    mkfs_option=""
+    mount_option=""
+    mount_point=/var/lib/ceph/osd0
+    
+    # user & group
+    user=ceph
+    group=ceph
+
+
+[osd1]
+    

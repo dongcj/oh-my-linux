@@ -1,0 +1,20 @@
+#!/bin/sh
+#Function:encrypt password
+#Writer:from internet
+
+if [[ $# != 1 ]];then
+    echo " Usage: encrypt clear_word"
+    exit 1
+fi
+
+word=$(echo $1 | od -An -tx1 | sed 's/..$//')
+
+for i in $(seq 1 ${#1});do
+    num=$(echo $word | awk -v c=$i '{print "ibase=16;"toupper($c)}' | bc)
+    code=$(awk -v char=$num 'BEGIN{print xor(char,120)}')
+    #xor(char,120)函数中的120是"x"字符的ascii值
+   password=$password$code
+done
+echo ${password}
+unset code word num
+
