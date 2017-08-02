@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Author: dongcj <ntwk@163.com>
-# description: 
+# description:
 #
 
 
@@ -27,7 +27,7 @@ THIS_RUN=${RUN_DIR}/${DIALOG_ANS_FILE_FINAL}
 
 
 #################################################################
-## 2. Remote execution setting: if you want remote exec function,  
+## 2. Remote execution setting: if you want remote exec function,
 ## ++ use -F <FUNCTION>, remote will only run function and exit
 #################################################################
 # std output format like the Log function
@@ -38,15 +38,15 @@ if [ "$1" = "-F" -o  "$1" = "--function" ]; then
     Log DEBUG "------ RUN \"$2\" on $(hostname -s)..."
     # TODO: who can tell me how to add two "space" in the line echo?
     PS4="  "
-    
-    # only one Concurrent 
+
+    # only one Concurrent
     lockfile=${TMP_DIR}/$2.lock
     if [ -f $lockfile ]; then
         Log ERROR "lockfile $lockfile exists, my be another is running?"
     else
         $2
     fi
-    
+
     if [ $? -eq 0 ]; then
         rm -rf $lockfile
         Log SUCC "------ RUN \"$2\" success\n"
@@ -66,7 +66,7 @@ fi
 ## eg: slice_mode_prompt
 #################################################################
 
-# default: -i --log-level=INFO  --ALL 
+# default: -i --log-level=INFO  --ALL
 
 
 
@@ -77,7 +77,7 @@ fi
 # --add         -a
 # --remove      -r
 # --upgrade     -U
-# --function    -F      
+# --function    -F
 
 # --help        -h
 # --version     -v
@@ -148,8 +148,8 @@ INI_Checker ${CONF_DIR}/${LAUNCHER}
 
 
 
-# Dialog_Question, 
-Dialog_Question 
+# Dialog_Question,
+Dialog_Question
 
 
 # check & Update ans file
@@ -160,7 +160,7 @@ ANS_Check_And_Update
 # get the basic ans value that used by blow
 ANS_Basic_Value_Get
 
- 
+
 # gen hosts file for ceph-ai
 Gen_Hosts_File
 
@@ -208,10 +208,10 @@ ANS_Advanced_Value_Get
 
 
 # update & prepare ceph-ai repo server
-Update_RepoData 
+Update_RepoData
 
 
-# prepare the yum repo 
+# prepare the yum repo
 Remote_Exec "${ALL_HOST}" "${BIN_DIR}/$(basename $0) -F 'Repo_Prepare'" $timeout
 
 
@@ -242,7 +242,7 @@ Remote_Exec "${ALL_HOST}" "${BIN_DIR}/$(basename $0) -F 'Get_HostInfo'" $timeout
 
 
 #################################################################
-## prepare ceph-ai server(DO NOT use!)
+## prepare ceph-ai server(use for the first time)
 #################################################################
 #Config_NTP_Server
 
@@ -293,7 +293,7 @@ Rsync_File "$ALL_HOST" "$RUN_DIR" "$BASE_DIR"
 #################################################################
 Remote_Exec "${MON_HOST}" "${BIN_DIR}/$(basename $0) -F 'Ceph_MON_Install'" $timeout
 
- 
+
 
 
 #################################################################

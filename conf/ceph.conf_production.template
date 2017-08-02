@@ -4,28 +4,26 @@
 #
 
 
-# global setting  
+# global setting
 ######################################################################
 [global]
     cluster = {{CLUSTER_NAME}}
     fsid = {{CLUSTER_ID}}
-    
+
     # Network, not ipaddr
     public network = {{PUBLIC_NETWORK}}
     cluster network = {{CLUSTER_NETWORK}}
-    
+
     auth cluster required = cephx
     auth service required = cephx
     auth client required = cephx
-    
+
     filestore xattr use omap = true
-    
     osd pool default size = {{CEPH_OSD_POOL_DEFAULT_SIZE}}
     osd pool default min size = {{CEPH_OSD_POOL_DEFAULT_MIN_SIZE}}
-    
+
     osd pool default pg num = {{OSD_POOL_PG_NUM}}
     osd pool default pgp num = {{OSD_POOL_PGP_NUM}}
-
 
     # perf tuning
     osd op threads = 8
@@ -37,33 +35,63 @@
     filestore queue max bytes = 536870912
     filestore queue committing max ops = 2000
     filestore queue committing max bytes = 536870912
-    
-    
     # enable for primary affinity tuning
     mon osd allow primary affinity = true
-    
-# http://docs.ceph.com/docs/jewel/rados/configuration/mon-config-ref/  
-# mon setting  
+
+    max open files = 131072
+
+# http://docs.ceph.com/docs/jewel/rados/configuration/mon-config-ref/
+# mon setting
 ######################################################################
 [mon]
     mon initial members = {{MON_HOST_LIST}}
     mon host = {{MON_HOST_LIST}}
     mon addr = {{MON_IPADDR_PORT}}
-    
-    
+
+
     # Multi MON conf, see more about function: Ceph_Conf_Generater
     {{for MON_HOST_IP_PORT}}
     [mon.{{0}}]
         host = {{0}}
         mon addr = {{1}}:{{2}}
     {{end for}}
-        
 
-    
+
+
 
 # osd setting
 ######################################################################
 [osd]
+
+    # filestore tuning
+    filestore xattr use omap = true
+    filestore min sync interval = 10
+    filestore max sync interval = 15
+    filestore queue max ops = 25000
+    filestore queue max bytes = 10485760
+    filestore queue committing max ops = 5000
+    filestore queue committing max bytes = 10485760000
+
+    # journal tuning
+    journal max write bytes = 1073714824
+    journal max write entries = 10000
+    journal queue max ops = 50000
+    journal queue max bytes = 10485760000
+
+    # osd tuning
+    osd journal size = 20000
+    osd max write size = 512
+    osd client message size cap = 2147483648
+    osd deep scrub stride = 131072
+    osd op threads = 8
+    osd disk threads = 4
+    osd map cache size = 1024
+    osd map cache bl size = 128
+    osd mount options xfs = "rw,noexec,nodev,noatime,nodiratime,nobarrier"
+    osd recovery op priority = 4
+    osd recovery max active = 10
+    osd max backfills = 4
+
 
     # Multi OSD
     {{for OSDNUM_HOST_LIST}}
@@ -85,14 +113,14 @@
         host = {{1}}
     {{end for}}
 
-    
+
 
 
 # client setting
 ######################################################################
 [client]
     rbd cache = true
-    
+
 [client.glance]
     keyring = /etc/ceph/ceph.client.glance.keyring
 
@@ -101,7 +129,7 @@
 
 [client.nova]
     keyring = /etc/ceph/ceph.client.nova.keyring
-    
+
 [client.radosgw.gateway]
     host = ceph-radosgw
 
@@ -113,6 +141,6 @@
     log file = /var/log/ceph/client.radosgw.gateway.log
     rgw dns name = ceph-admin
     rgw print continue = false
-    
-    
-    
+
+
+
