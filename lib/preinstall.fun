@@ -375,9 +375,9 @@ Install_Basic_Soft() {
 
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
-    softlist="bash-completion ethtool rsync  python-pip hdparm ipmitool \
-    net-tools  pciutils iotop mycli ifstat locales bmon \
-    lsscsi  smartmontools htop ntp  fio bc nmon wget "
+    softlist="bash-completion bc bmon ethtool fio  hdparm  htop \
+    ipmitool iotop ifstat locales  lsscsi  mycli net-tools \
+    nmon ntp  pciutils python-pip  rsync smartmontools wget"
     softlist=`echo $softlist`
 
     # add chkconfig for ubuntu
@@ -414,7 +414,7 @@ Install_Basic_Soft() {
 
 
 ######################################################################
-# 作用: 配置本机为NTP Server
+# 作用: 配置本机为 NTP Server
 # 用法: Config_NTP_Server
 # 注意：
 ######################################################################
@@ -439,11 +439,9 @@ Config_NTP_Server() {
 }
 
 
-
-
 ######################################################################
 # 作用: 设置本机Hosts
-# 用法: Config_NTP_Server
+# 用法: Gen_Hosts_File
 # 注意：
 ######################################################################
 Gen_Hosts_File() {
@@ -528,7 +526,7 @@ Set_Hosts_Hostname() {
 # 注意：
 ######################################################################
 Config_SSH_Server() {
-    Log -n DEBUG "Configing ssh server..."
+    Log DEBUG "Configing ssh server..."
 
     ############# Config SSH ###############
     ########################################
@@ -577,23 +575,7 @@ EOF
 ######################################################################
 Network_CheckDevice() {
 
-:<<EOF
-    NETWORK_PCIETHER_COUNT=4
-    NETWORK_PCIETHER_1G_COUNT=2
-    NETWORK_PCIETHER_1G_BRAND="Intel Corporation I350 Gigabit (rev 01)"
-    NETWORK_PCIETHER_10G_COUNT=2
-    NETWORK_PCIETHER_10G_BRAND="Intel Corporation 82599ES 10-Gigabit SFI/SFP+ (rev 01)"
-    NETWORK_ALLETHERS="enp2s0f0 enp2s0f1 enp129s0f0 enp129s0f1"
-    NETWORK_PHYETHERS="enp2s0f0 enp2s0f1 enp129s0f0 enp129s0f1"
-    NETWORK_PHYETHERS_INFO="enp2s0f0,00:25:90:ec:5c:fe,1000Mb/s,yes enp2s0f1,00:25:90:ec:5c:ff,1000baseT,no enp129s0f0,00:1b:21:bb:ce:bc,10000baseT,no enp129s0f1,00:1b:21:bb:ce:be,10000Mb/s,yes"
-    NETWORK_IPADDR="192.168.120.244"
-    NETWORK_IPMASK="255.255.255.0"
-    NETWORK_GATEWAY="192.168.120.1"
-    NETWORK_DNS="8.8.8.8"
-    NETWORK_DOMAIN="asdaf.cxx"
-
-EOF
-
+    ：
     # func in func, fuck
     get_network_info() {
 
@@ -744,7 +726,6 @@ Network_RenameDevice() {
 
     :
 
-
 }
 
 
@@ -782,408 +763,6 @@ Network_ChangeDevice() {
 }
 
 
-
-
-######################################################################
-# 作用: 配置Linux系统
-# 用法: Config_System
-# 注意：
-######################################################################
-Config_System() {
-
-
-    ############ Config LANG ###############
-    ########################################
-    Log DEBUG "Config Language..."
-    apt-get install -y wget locales
-    echo "LC_ALL=en_US.UTF-8" >> /etc/environment
-    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
-    echo "LANG=en_US.UTF-8" > /etc/locale.conf
-    locale-gen en_US.UTF-8
-
-    PROFILE_CONF=/etc/profile
-    if ! grep -q "LANG=en_US.UTF-8" $PROFILE_CONF; then
-        echo "export LANG=en_US.UTF-8" >>$PROFILE_CONF
-    fi
-    source $PROFILE_CONF
-    Log DEBUG "config ok"
-
-    ############ Config Selinux ############
-    ########################################
-    Log DEBUG "Config Selinux..."
-    SELINUX_CONF=/etc/selinux/config
-    CURRENT_SELINUX_VALUE=`awk -F"=" '/^SELINUX=/ {print $2}' $SELINUX_CONF`
-    if [ -f $SELINUX_CONF ]; then
-        if [ "$CURRENT_SELINUX_VALUE" != "disabled" ]; then
-            sed -i "/^SELINUX=/s/$CURRENT_SELINUX_VALUE/disabled/g" $SELINUX_CONF
-        fi
-    fi
-    setenforce 0 >&/dev/null
-    Log DEBUG "config ok"
-
-
-
-    ########## Config Security #############
-    ########################################
-    Log DEBUG "Config Security..."
-    sed -i s'/Defaults.*requiretty/#Defaults requiretty'/g /etc/sudoers
-    Log DEBUG "Config ok"
-
-
-    ########## Config Services #############
-    ########################################
-    Log DEBUG "Config Services..."
-    TO_DISABLE_SERVICE="abrtd acpid atd auditd avahi-daemon autofs bluetooth cpuspeed \
-                        cups firstboot hidd ip6tables isdn mcstrans messagebus \
-                        NetworkManager nfs-server pcscd rawdevices restorecond \
-                        rhnsd rhsmcertd sendmail yum-updatesd"
-    
-    # disable services
-    for i in $TO_DISABLE_SERVICE; do
-        # start -> stop
-        if systemctl -q is-active $i >&/dev/null; then
-            Run systemctl stop $i
-        fi
-        # enable -> disable
-        if systemctl -q is-enabled $i >&/dev/null; then
-            Run systemctl disable $i
-        fi
-    done
-    
-    # ubuntu remove mlocate
-    dpkg -P mlocate
-
-    # message log warn the follow
-    if [ -f /usr/lib/systemd/system/wpa_supplicant.service ]; then
-        chmod 644 /usr/lib/systemd/system/wpa_supplicant.service
-    fi
-
-    Log DEBUG "Config ok"
-
-
-    ########### Config Limits ##############
-    ########################################
-    Log DEBUG "Config Limits..."
-    
-    ulimit -n 655350
-    ulimit -u 409600
-    
-    # seting user profile
-    USER_PROFILE=~/.profile
-    if ! grep -q "ulimit" $USER_PROFILE; then
-        echo "ulimit -n 65535" >>$USER_PROFILE
-        echo "ulimit -u 192098" >>$USER_PROFILE
-        echo "ulimit -i 192098" >>$USER_PROFILE
-    fi
-    source $USER_PROFILE
-
-    #/etc/security/limits.conf
-    LIMITS_CONF=/etc/security/limits.conf
-    grep -q "^[^#].*soft.*nproc" $LIMITS_CONF  || echo "*       soft    nproc   131072" >>$LIMITS_CONF
-    grep -q "^[^#].*hard.*nproc" $LIMITS_CONF  || echo "*       hard    nproc   131072" >>$LIMITS_CONF
-    grep -q "^[^#].*soft.*nofile" $LIMITS_CONF || echo "*       soft    nofile   655360" >>$LIMITS_CONF
-    grep -q "^[^#].*hard.*nofile" $LIMITS_CONF || echo "*       hard    nofile   655360" >>$LIMITS_CONF
-    
-    if [ -d /etc/security/limits.d ]; then
-        echo -e "*\tsoft\tnofile\t655350" > /etc/security/limits.d/90-nproc.conf
-        echo -e "*\thard\tnofile\t655350" >> /etc/security/limits.d/90-nproc.conf
-    fi
-    
-    
-    
-    Log DEBUG "Config ok"
-
-
-
-    ############# Config IPv6 ##############
-    ########################################
-    Log DEBUG "Config IPV6..."
-    
-    SYSCTL_CONF=/etc/sysctl.conf
-    SYSCONFIG_NETWORK=/etc/sysconfig/network
-    
-    # one method
-    [ -f /proc/sys/net/ipv6/conf/all/disable_ipv6 ] && echo 1 >/proc/sys/net/ipv6/conf/all/disable_ipv6
-    
-    # another method
-    if [ "`awk -F"=" '/net.ipv6.conf.all.disable_ipv6/ {print $2}' ${SYSCTL_CONF} | xargs`" != "1" ]; then
-        sed -i '/net.ipv6.conf.all.disable_ipv6/d' ${SYSCTL_CONF}
-        echo " " >>${SYSCTL_CONF}
-        echo "# Disable IPv6 Globally" >>${SYSCTL_CONF}
-        echo "net.ipv6.conf.all.disable_ipv6 = 1" >>${SYSCTL_CONF}
-        sysctl -w net.ipv6.conf.all.disable_ipv6=1
-        sysctl -p >&/dev/null
-    fi
-
-    if [ -f $SYSCONFIG_NETWORK ]; then
-        if grep -q "NETWORKING_IPV6" $SYSCONFIG_NETWORK; then
-            sed -i 's/NETWORKING_IPV6=.*/NETWORKING_IPV6=no/' $SYSCONFIG_NETWORK
-        fi
-    fi
-    Log DEBUG "disabled ok"
-
-
-    ######### Optimized Networking #########
-    ########################################
-    Log DEBUG "Optimizing Networking..."
-    if ! grep -q "Optimized Networking Globally" ${SYSCTL_CONF}; then
-        echo " " >>${SYSCTL_CONF}
-        echo "# Optimized Networking Globally" >>${SYSCTL_CONF}
-
-        cat <<EOF >>${SYSCTL_CONF}
-fs.file-max = 6815744
-fs.aio-max-nr = 1048576
-kernel.sem = 250 32000 100 128
-
-# Net tunning
-net.core.rmem_default = 254800000
-net.core.wmem_default = 254800000
-net.core.rmem_max = 254800000
-net.core.wmem_max = 254800000
-net.core.optmem_max = 25480000
-
-net.core.somaxconn = 32768
-net.core.netdev_max_backlog =  250000
-
-net.ipv4.ip_local_port_range = 9000 65500
-
-net.ipv4.tcp_fin_timeout = 30
-net.ipv4.tcp_keepalive_time = 1200
-
-net.ipv4.tcp_max_syn_backlog = 65536
-net.ipv4.tcp_max_tw_buckets = 5000
-net.ipv4.tcp_max_orphans = 3276800
-net.ipv4.tcp_mem = 94500000 915000000 927000000
-net.ipv4.tcp_rmem = 4096 87380 25480000
-net.ipv4.tcp_wmem = 4096 65536 25480000
-
-net.ipv4.tcp_syn_retries = 2
-net.ipv4.tcp_synack_retries = 2
-net.ipv4.tcp_timestamps = 0
-net.ipv4.tcp_sack = 0
-net.ipv4.tcp_tw_reuse = 1
-net.ipv4.tcp_tw_recycle = 1
-net.ipv4.tcp_low_latency = 1
-
-# Memory turnning, /proc/sys/vm/overcommit_memory
-vm.overcommit_memory = 1
-
-EOF
-        sysctl -p >&/dev/null
-    fi
-    Log DEBUG "Optimized ok"
-
-
-    ######### Optimized Kernel #############
-    ########################################
-    Log DEBUG "Optimizing Kernel..."
-    if ! grep -q "Optimized Kernel Globally" ${SYSCTL_CONF}; then
-        echo " " >>${SYSCTL_CONF}
-        echo "# Optimized Kernel Globally" >>${SYSCTL_CONF}
-
-        cat <<EOF >>${SYSCTL_CONF}
-fs.file-max = 6815744
-fs.aio-max-nr = 1048576
-kernel.sem = 250 32000 100 128
-
-EOF
-
-        sysctl -p >&/dev/null
-    fi
-    Log DEBUG "Optimized ok"
-
-    
-    ########## Config TimeZone #############
-    ########################################
-    Log DEBUG "Config TIMEZONE..."
-    localtime_file=/etc/localtime
-    clock_file=/etc/sysconfig/clock
-    if [ -f /usr/share/zoneinfo/Asia/Shanghai ]; then
-        # remove the old localtime file
-        rm -rf ${localtime_file}.old && mv ${localtime_file} ${localtime_file}.old
-        ln -s /usr/share/zoneinfo/Asia/Shanghai ${localtime_file}
-
-        if [ -f $clock_file ]; then
-            sed -i '/^[^#]/d' $clock_file
-            echo "ZONE=\"Asia/Shanghai\"" >>$clock_file
-            echo "UTC=true" >>$clock_file
-        fi
-        # update the systime to hardware clock
-        hwclock --systohc
-    fi
-    Log DEBUG "Config ok"
-
-
-    ########## client NTP client ###########
-    ########################################
-    Log DEBUG "Config ntp client..."
-    ntp_conf_file=/etc/ntp.conf
-
-    # 
-    if ! grep -q "interface ignore wildcard" /etc/ntp.conf; then
-        echo "interface ignore wildcard" >> /etc/ntp.conf \
-        && systemctl restart ntp && echo "set ntp.conf success"
-    fi
-    
-    Run systemctl stop  ntpd.service
-    Run ntpdate $CEPH_AI_VM_HOSTNAME
-    Run systemctl start ntpd.service
-    Log DEBUG "Config ok"
-
-
-
-
-    ########### Config vim #################
-    ########################################
-    Log DEBUG "Config vim..."
-    if [ -f /root/.bashrc ]; then
-        if which vim >/dev/null 2>&1; then
-            grep -q 'alias vi=' ~/.bashrc || \
-            { sed -i "s@alias mv=\(.*\)@alias mv=\1\nalias vi=vim@" ~/.bashrc && \
-            echo 'syntax on' >> /etc/vimrc; }
-        fi
-    fi
-
-    # vim setting
-    if ! grep -q "set paste" /etc/vimrc &>/dev/null; then
-        echo "set history=1000" >> /etc/vimrc
-        echo "set expandtab" >> /etc/vimrc
-        echo "set ai" >> /etc/vimrc
-        echo "set tabstop=4" >> /etc/vimrc
-        echo "set shiftwidth=4" >> /etc/vimrc
-        echo "set paste" >> /etc/vimrc
-        echo "colo delek" >> /etc/vimrc
-    fi
-
-    # vim as default editor
-    if ! grep -q "EDITOR=" $PROFILE_CONF; then
-        echo "export EDITOR=vim" >>$PROFILE_CONF
-    fi
-
-    ########### Config alias ###############
-    ########################################
-    Log DEBUG "Config alias..."
-    
-    cat <<EOF >~/.bash_aliases
-    alias ls='ls --color=auto'
-    alias dir='dir --color=auto'
-    alias vdir='vdir --color=auto'
-
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
-
-    # some more ls aliases
-    alias ll='ls -lrt'
-EOF
-
-    PROFILE_CONF=/etc/profile
-    if ! grep -q "source ~/.bash_aliases" $PROFILE_CONF; then
-        echo "source ~/.bash_aliases" >>$PROFILE_CONF
-    fi
-    Log DEBUG "Config ok"
-
-    ######### Config history ###############
-    ########################################
-    Log DEBUG "Config history..."
-    
-    # 1st Method: install bashhub-client, centralize store & search
-    curl -OL https://bashhub.com/setup && bash setup
-    
-    USER_IP=`who -u am i 2>/dev/null | awk '{print $NF}' | sed -e 's/[()]//g'`
-    LOGNAME=`who -u am i | awk '{print $1}'`
-    HISTDIR=/usr/local/.history
-    if [ -z "$USER_IP" ]; then
-        USER_IP=`hostname`
-    fi
-
-    if [ ! -d "$HISTDIR" ]; then
-        mkdir -p $HISTDIR
-        chmod 777 $HISTDIR
-    fi
-
-    if [ ! -d $HISTDIR/${LOGNAME} ]; then
-        mkdir -p $HISTDIR/${LOGNAME}
-        chmod 300 $HISTDIR/${LOGNAME}
-    fi
-
-    export HISTSIZE=4000
-
-    DT=`date +"%Y%m%d_%H%M%S"`
-    export HISTFILE="$HISTDIR/${LOGNAME}/${USER_IP}.history.$DT"
-    export HISTTIMEFORMAT="[%Y.%m.%d %H:%M:%S] "
-    chmod 600 $HISTDIR/${LOGNAME}/*.history* 2>/dev/null
-
-    # sum function
-    if [ -f ~/.bash_profile ]; then
-        if ! grep -q "historysum()" ~/.bash_profile; then
-            cat <<EOF >>~/.bash_profile
-# historysum function add by Krrish
-
-historysum() {
-
-    #history
-    printf "\tCOUNT\t\tCOMMAND\n";
-
-    cat ~/.bash_history | awk '{ list[$1]++; } \
-    END{
-        for(i in list){
-            printf("\t%d\t\t%s\n",list[i],i);
-        }
-    }' | sort -nrk 2 | head
-
-}
-
-EOF
-        source ~/.bash_profile
-        fi
-    fi
-
-# logrotate the history log
-cat <<EOF >/etc/logrotate.d/history
-${HISTDIR}/* {
-    notifempty
-    olddir ${HISTDIR}/old
-    missingok
-    sharedscripts
-    copytruncate
-}
-EOF
-
-    Log DEBUG "Config ok"
-    
-    ########### Config Postfix #############
-    ########################################
-    
-    # resolve postfix error
-    postfix_conf=/etc/postfix/main.cf
-    if [ -f $postfix_conf ]; then
-        # change inet_protocols to ipv4
-        sed -i '/^inet_protocols =/s/.*/inet_protocols = ipv4/' $postfix_conf
-    fi
-    
-    # no check mail
-    PROFILE_CONF=/etc/profile
-    if ! grep -q "unset MAILCHECK" $PROFILE_CONF; then
-        echo "unset MAILCHECK" >> $PROFILE_CONF
-    fi
-    source $PROFILE_CONF
-    
-    # Append lib
-    if ! grep -q "/usr/local/lib" /etc/ld.so.conf; then
-        echo "/usr/local/lib/" >> /etc/ld.so.conf
-    fi
-    
-    ########### Config snippets ############
-    # 将错误按键的beep声关掉。stop the“beep"
-    cp -rLfap /etc/inputrc /etc/inputrc.origin
-    sed -i '/#set bell-style none/s/#set bell-style none/set bell-style none/' /etc/inputrc
-
-}
-
-
-
-
 ######################################################################
 # 作用: 获取服务器 System 信息
 # 用法: Get_SystemInfo
@@ -1192,6 +771,7 @@ EOF
 Get_SystemInfo() {
 
     Log DEBUG "${COLOR_YELLOW}Getting system info...${COLOR_CLOSE}"
+    
     DMIDECODE=`dmidecode -t system`
     SYSTEM_MANUFACTURER=`echo "$DMIDECODE" | grep 'Manufacturer' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_PRODUCTNAME=`echo "$DMIDECODE" | grep 'Product Name' | head -n 1 | cut -f 2 -d':' | xargs`
