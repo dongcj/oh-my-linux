@@ -388,7 +388,7 @@ Run() {
     if echo $DEBUG | grep -qi "y"; then
         $command
     else
-        $command &>>${callerlog}
+        $command >>${callerlog} 2>&1
     fi
     
     if [ $? -ne 0 ]; then
