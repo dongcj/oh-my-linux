@@ -27,6 +27,7 @@ INPUT_MODE=single
 
 ############################# Terminal Style #############################
 set -o ignoreeof
+echo 
 TERM=xterm; export TERM;
 
 [[ "$LANGUAGE" = "cn" ]] && export LANG=en_US.UTF-8  || export LANG=C
