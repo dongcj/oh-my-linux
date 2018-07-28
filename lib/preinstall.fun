@@ -1531,16 +1531,24 @@ Get_NetInfo() {
     
     if echo $NETWORK_PCI_INFO | grep -q Virtio; then
         Log WARN "Virtio network device found, might be a vm"
+        NETWORK_PCIETHER_1G_BRAND=virtio
+        NETWORK_PCIETHER_10G_BRAND=virtio
     fi
 
     NETWORK_PCIETHER_1G_COUNT=`echo "$NETWORK_PCI_INFO" | grep " Gigabit Ethernet" | wc -l`
-    NETWORK_PCIETHER_1G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " Gigabit Ethernet" | \
-    sed  "s/.* Ethernet controller: \(.*\) Gigabit .*/\1/" | sort | uniq`
-
+    
+    if [ "$NETWORK_PCIETHER_1G_COUNT" -gt 0 ] && [ -z "$NETWORK_PCIETHER_1G_BRAND" ]; then
+        NETWORK_PCIETHER_1G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " Gigabit Ethernet" | \
+        sed  "s/.* Ethernet controller: \(.*\) Gigabit .*/\1/" | sort | uniq`
+    fi
+    
     NETWORK_PCIETHER_10G_COUNT=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit Ethernet" | wc -l`
-    NETWORK_PCIETHER_10G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit Ethernet" | \
-    sed "s/.*Ethernet controller: \(.*\) 10-Gigabit .*/\1/" | sort | uniq`
-
+    
+    if [ "$NETWORK_PCIETHER_10G_COUNT" -gt 0 ] && [ -z "$NETWORK_PCIETHER_10G_BRAND" ]; then
+        NETWORK_PCIETHER_10G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit Ethernet" | \
+        sed "s/.*Ethernet controller: \(.*\) 10-Gigabit .*/\1/" | sort | uniq`
+    fi
+    
     NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo | tr -d ':' | xargs`
 
     # get the physical ether
