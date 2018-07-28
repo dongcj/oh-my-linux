@@ -375,7 +375,7 @@ Install_Basic_Soft() {
 
     softlist="bash-completion rsync  python-pip ipmitool \
     net-tools  pciutils iotop mycli ifstat locales bmon \
-    lsscsi  smartmontools htop ntp  fio ceph bc nmon wget "
+    lsscsi  smartmontools htop ntp  fio bc nmon wget "
 
     softlist=`echo $softlist`
     Run $PKG_INST_CMD $softlist
