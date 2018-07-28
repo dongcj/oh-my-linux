@@ -383,10 +383,16 @@ Run() {
         Log ERROR "Function Run() error! Usage: Run <command>\n"
     fi
     command=$*
-    Log DEBUG "Run: $command"
-    $command
+    
+    Log DEBUG "${COLOR_YELLOW}Run: $command${COLOR_CLOSE}"
+    if echo $DEBUG | grep -qi "y"; then
+        $command
+    else
+        $command &>>${callerlog}
+    fi
+    
     if [ $? -ne 0 ]; then
-        Log ERROR "command run failed: $command"
+        Log ERROR "Failed: $command"
     fi
 
 }
