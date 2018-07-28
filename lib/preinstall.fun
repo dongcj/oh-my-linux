@@ -375,7 +375,7 @@ Install_Basic_Soft() {
 
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
-    softlist="bash-completion rsync  python-pip hdparm ipmitool \
+    softlist="bash-completion ethtool rsync  python-pip hdparm ipmitool \
     net-tools  pciutils iotop mycli ifstat locales bmon \
     lsscsi  smartmontools htop ntp  fio bc nmon wget "
     softlist=`echo $softlist`
@@ -1276,17 +1276,17 @@ Get_MEMInfo() {
     
     MEM_INFO=`cat /proc/meminfo`
     _MEMORY_TOTAL=`echo "$MEM_INFO" | grep MemTotal | awk  '{print $2}'`
-    MEMORY_TOTAL=`printf "%G" $(echo "scale = 0; $_MEMORY_TOTAL/1024/1002" | bc)`
+    MEMORY_TOTAL=`printf "%G" $(echo "scale = 1; $_MEMORY_TOTAL/1024/1002" | bc)`
     _MEMORY_FREE=`echo "$MEM_INFO" | grep MemFree | awk  '{print $2}'`
-    MEMORY_FREE=`printf "%G" $(echo "scale = 0; $_MEMORY_FREE/1024/1002" | bc)`
+    MEMORY_FREE=`printf "%G" $(echo "scale = 1; $_MEMORY_FREE/1024/1002" | bc)`
     MEMORY_INFO=`dmidecode --type 17 | grep Speed`
     MEMORY_SLOT=`echo "$MEMORY_INFO" | wc -l`
     MEMORY_NUMBER=`echo "$MEMORY_INFO" | grep MHz | wc -l`
     # memory speed maybe
     MEMORY_SPEED=`echo "$MEMORY_INFO" | grep MHz |  sed -n 's/.*Speed: \(.*\) MHz/\1/p' | sort | uniq`
 
-    Log DEBUG " --MEMORY_TOTAL=$MEMORY_TOTAL"
-    Log DEBUG " --MEMORY_FREE=$MEMORY_FREE"
+    Log DEBUG " --MEMORY_TOTAL=${MEMORY_TOTAL} GB"
+    Log DEBUG " --MEMORY_FREE=${MEMORY_FREE} GB"
     Log DEBUG " --MEMORY_SLOT=$MEMORY_SLOT"
     Log DEBUG " --MEMORY_NUMBER=$MEMORY_NUMBER"
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
@@ -1500,7 +1500,7 @@ Get_DiskInfo() {
     Log DEBUG " --DISK_BOOT=$DISK_BOOT"
     Log DEBUG " --DISK_ROOTTYPE=\"$DISK_ROOTTYPE\""
     Log DEBUG " --DISK_INLVM_RAID=\"$DISK_INLVM_RAID\""
-    Log DEBUG " --DISK_ROOTSIZE=\"$DISK_ROOTSIZE} GB\""
+    Log DEBUG " --DISK_ROOTSIZE=\"${DISK_ROOTSIZE} GB\""
     Log DEBUG " --DISK_RAIDCARD=\"$DISK_RAIDCARD\""
     Log DEBUG " --DISK_ROTATION_RATE_LIST=\"$DISK_ROTATION_RATE_LIST\""
     Log DEBUG " --DISK_ISINRAID=\"$DISK_ISINRAID\""
@@ -1521,10 +1521,7 @@ Get_DiskInfo() {
 ######################################################################
 Get_NetInfo() {
 
-    # TODO: get the ip and ether need to be more test!!! it is not stable
-    # ++ I do not want to do it at this time...
-
-    Log DEBUG "Get NETWORK info..."
+    Log DEBUG "${COLOR_YELLOW}Getting Network info...${COLOR_CLOSE}"
 
     NET_DEV_PREFIX="br bond eth en em"
 
@@ -1546,7 +1543,7 @@ Get_NetInfo() {
     # get the physical ether
     unset NETWORK_PHYETHERS
     for i in $NETWORK_ALLETHERS; do
-        if ethtool $i | grep "Supported ports" | egrep -q "FIBRE|TP"; then
+        if ethtool $i | grep "Supported ports" | egrep -q "FIBRE|TP" &>/dev/null; then
             NETWORK_PHYETHERS="$NETWORK_PHYETHERS $i"
         fi
     done
@@ -1609,7 +1606,8 @@ Get_NetInfo() {
 
 
     # NET_USE_ETHER alreay geted from settings.conf
-
+    NET_USE_ETHER=`ip route get 8.8.8.8 | grep src | sed "s/.* dev \(.*\) src .*/\1/"`
+    
     # get the NET_USE_ETHER type(only support bridge or bond now, other mode not support)
     if ! echo $NETWORK_PHYETHERS | grep -wq $NET_USE_ETHER; then
 
@@ -1677,7 +1675,7 @@ Get_NetInfo() {
     Log DEBUG " --NETWORK_DNS=$NETWORK_DNS"
     Log DEBUG " --NETWORK_DOMAIN=$NETWORK_DOMAIN"
 
-    Log DEBUG ""
+    Log SUCC "Get Network info successful."
 
 
 

@@ -73,17 +73,13 @@ cd $(dirname $0)
 . ../lib/preinstall.fun
 
 Check_OS_Distrib
-
 Install_Basic_Soft
-
 Get_SystemInfo
-
 Get_OSInfo
-
 Get_CPUInfo
 Get_MEMInfo
 Get_DiskInfo
-
+Get_NetInfo
 
 
 
