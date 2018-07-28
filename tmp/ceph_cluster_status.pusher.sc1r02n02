@@ -1,5 +1,0 @@
-        [sc1r02n02]
-            clustername=ceph
-            port=6789
-            pid=11955
-            status=running

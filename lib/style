@@ -110,7 +110,7 @@ Draw_Line2() {
 
 
 ######################################################################
-# 作用: 检测Shell窗口大小,解决文字过大及窗口变小造成变形问题
+# 作用: 检测Shell窗口大小, 解决文字过大及窗口变小造成变形问题
 # 用法: Probe_Window 
 # 注意： 
 ######################################################################
@@ -375,93 +375,3 @@ Wheel_Loop(){
     kill -PIPE $BG_PID
     #echo 1>&3
 }
-
-
-
-############################# Yad Style #############################
-
-## gtk default style
-cat > ~/.gtkrc-2.0 <<EOF
-style "timeout-indicator"
-{
-    GtkProgressBar::min-horizontal-bar-height = 5
-    GtkProgressBar::min-vertical-bar-width = 2
-}
-widget "*yad-timeout-indicator" style "timeout-indicator"
-EOF
-
-
-WIDTH=${WIDTH:-666}
-HEIGHT=${HEIGHT:-450}
-TITLE=${YAD_TITLE:-'Ceph_AI_by_dongcj'}
-
-
-#标题栏中的图标
-WINDOW_ICON=${WINDOW_ICON:-'/root/Ceph_AI_GUI/lib/static/dog.ico'}
-# dialog中的图标
-IMAGE=${IMAGE:-'dialog-question'}
-# Theme
-ICON_THEME=Adwaita
-
-# 超时
-TIMEOUT=${TIMEOUT:-100}
-
-# 超时显示
-TIMEOUT_INDICATOR=${TIMEOUT_INDICATOR:-'bottom'}
-
-# 边框
-BODERS=${BORDERS:-2}
-
-# 居中
-CENTER=yes
-#无法调整大小
-FIXED=yes
-# ON ALL desktop
-STICKY=yes
-
-MOUSE=yes
-#最上层
-ON_TOP=yes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### the test style
-<<EOF
-
-# 打印每次返回的信息
-TITLE="--always-print-result --dialog-sep --image=/usr/share/icons/remastersys.png --title="
-
-TITLETEXT="Remastersys USB Startup Disk Tool"
-
-
-TEXT="--text="
-ENTRY="--entry "
-ENTRYTEXT="--entry-text "
-FILESELECTION="--file-selection "
-MENU="--list --column=Pick --column=Info"
-PASSWORD="--entry --hide-text "
-
-# 给yes, no, cancel加标准图标
-YES_NO_CANCEL="--button=gtk-yes:0 --button=gtk-no:1 --button=gtk-cancel:2"
-
-
-WITHLICONS="--licon=/root/Ceph_AI_GUI/lib/static/dog.ico"
-WITHRICONS="--ricon=/root/Ceph_AI_GUI/lib/static/dog.ico"
-
-
-
-
-
-
-EOF

@@ -1774,10 +1774,10 @@ Get_HostInfo() {
 
 ######################################################################
 # 作用: 判断 OS 发行版
-# 用法: Check_OS_DISTRIB 
+# 用法: Check_OS_Distrib 
 # 注意：
 ######################################################################
-Check_OS_DISTRIB(){
+Check_OS_Distrib(){
 
    RELEASE_FILE=/etc/*-release
    if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" $RELEASE_FILE; then

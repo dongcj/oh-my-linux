@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
 # Author: dongcj <ntwk@163.com>
-# description: 全局使用的function放在这里
+# description: 全局使用的 functions
 #
-
 
 # import Settings
 . ../conf/settings.conf
@@ -11,15 +10,13 @@
 # import Styles
 . ../lib/style
 
-
-
 ######################################################################
-# 作用: 日志记录, 日志记入当前日志文件, 同时集中写入main.log
+# 作用: 日志记录, 日志记入当前日志文件, 同时集中写入 main.log
 # 用法: Log [-n] [LEVEL] <INFORMATION> [ERROR_EXITFLAG]; 
 # ++ -n: 不换行
 # ++ ERROR_EXITFLAG: 如果是no_exit, 即使错误也不退出
-# color: DEBUG:normal  WARN:yellow  ERROR:red  SUCC:green 
-# 注意：DEBUG时只写日志，不屏幕输出; ERROR会退出脚本; 
+# 颜色: DEBUG: normal  WARN: yellow  ERROR: red  SUCC: green 
+# 注意: DEBUG时只写日志，不屏幕输出; ERROR会退出脚本; 
 ######################################################################
 Log() { 
 
@@ -156,8 +153,6 @@ Log() {
     esac
 
 }
-
-
 
 
 ######################################################################
@@ -801,7 +796,7 @@ INI_Parser() {
 # 注意：
 ######################################################################
 Yaml_Checker() {
-    :
+    perl -MYAML -e 'use YAML;YAML::LoadFile("./docker-compose.yml")'
     
     
     
