@@ -1209,13 +1209,11 @@ Get_SystemInfo() {
 ######################################################################
 Get_OSInfo() {
 
-    Log DEBUG "Get OS info..."
-    RELEASE_FILE=/etc/redhat-release
-    OS_DISTRIBUTION=`sed -n '1p' $RELEASE_FILE | awk '{OFS=" ";print $1" "$2" "}' | xargs`
-    [ "$OS_DISTRIBUTION" != "Red Hat" -a "$OS_DISTRIBUTION" != "CentOS Linux" ] && { \
-        Log WARN "Not RedHat/CentOS Linux? exit"; return 1; }
+    Log DEBUG "${COLOR_YELLOW}Getting OS info...${COLOR_CLOSE}"
+
+    OS_DISTRIBUTION=${OS}
     OS_FAMILY=`uname`
-    [ "$OS_FAMILY" != "Linux" ] && { Log WARN "Not RedHat/CentOS Linux? exit"; return 1; }
+    [ "$OS_FAMILY" != "Linux" ] && { Log WARN "Not Linux? exit"; return 1; }
     OS_VERSION=`cat $RELEASE_FILE | awk '{print $((NF-1))}'`
     [ ${OS_VERSION:0:1} -ge 6 ] 2>/dev/null || { Log WARN "RedHat/CentOS version must greater than 6, exit"; return 1; }
     OS_ARCH=`arch`;OS_BIT=`getconf LONG_BIT`
@@ -1763,15 +1761,23 @@ Check_OS_Distrib(){
    if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" $RELEASE_FILE; then
        OS=CentOS
        PKG_INST_CMD="yum -y install"
+       RELEASE_FILE=/etc/centos-release
+       
    elif grep -Eqi "Debian" /etc/issue || grep -Eq "Debian" $RELEASE_FILE; then
        OS=Debian
        PKG_INST_CMD="apt -y install"
+       RELEASE_FILE=/etc/lsb-release
+       
    elif grep -Eqi "Ubuntu" /etc/issue || grep -Eq "Ubuntu" $RELEASE_FILE; then
        OS=Ubuntu
        PKG_INST_CMD="apt -y install"
+        RELEASE_FILE=/etc/lsb-release
+       
    elif grep -Eqi "Alpine" /etc/issue || grep -Eq "Alpine" $RELEASE_FILE; then
        OS=Alpine
        PKG_INST_CMD="apk -y -q install"
+        RELEASE_FILE=/etc/lsb-release
+        
    else
        echo "Not support OS, Please reinstall OS and retry!"
        return 1
