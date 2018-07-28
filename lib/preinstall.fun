@@ -1215,7 +1215,6 @@ Get_OSInfo() {
     OS_FAMILY=`uname`
     [ "$OS_FAMILY" != "Linux" ] && { Log WARN "Not Linux? exit"; return 1; }
     OS_VERSION=`cat $RELEASE_FILE | awk '{print $((NF-1))}'`
-    [ ${OS_VERSION:0:1} -ge 6 ] 2>/dev/null || { Log WARN "RedHat/CentOS version must greater than 6, exit"; return 1; }
     OS_ARCH=`arch`;OS_BIT=`getconf LONG_BIT`
     OS_HOSTID=`hostid`
     OS_HOSTNAME=${MY_HOSTNAME}
