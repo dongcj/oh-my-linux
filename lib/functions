@@ -67,12 +67,12 @@ Log() {
                                 printf "$info\n";
 
                             else
-                                printf "  [$level]: $info\n";
+                                printf "[$level]: $info\n";
                                 
                             fi
                             last_wraped=yes
                         else
-                            printf "  [$level]: $info...";                            
+                            printf "[$level]: $info...";                            
                             last_wraped=no
                         fi
                     fi
@@ -81,19 +81,19 @@ Log() {
             fi
             
             # log to main
-            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
+            echo -e "`$NOW_TIME`  [$MY_HOSTNAME:$caller]  [$level]  $info" &>>${LOG_DIR}/${MAIN_LOG}
             # log to current log    
-            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME]\t[$level]\t$info" &>>${callerlog}
+            echo -e "`$NOW_TIME`  [$MY_HOSTNAME]  [$level]  $info" &>>${callerlog}
 
         ;;
         WARN)
             
             #if Is_TTY; then
-                printf "  ${COLOR_YELLOW}[$level ]: [!]$info${COLOR_CLOSE}\n"; 
+                printf "${COLOR_YELLOW}[$level ]: [!]$info${COLOR_CLOSE}\n"; 
             #fi
             
-            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level ]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
-            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME]\t[$level ]\t${COLOR_YELLOW}$info${COLOR_CLOSE}" &>>${callerlog}
+            echo -e "`$NOW_TIME`  [$MY_HOSTNAME:$caller]  [$level ]  $info" &>>${LOG_DIR}/${MAIN_LOG}
+            echo -e "`$NOW_TIME`  [$MY_HOSTNAME]  [$level ]  ${COLOR_YELLOW}$info${COLOR_CLOSE}" &>>${callerlog}
         ;;
         ERROR)
             # print to screen
@@ -101,14 +101,14 @@ Log() {
             
             #if Is_TTY; then
                 if [ "$last_wraped" = "no" ]; then
-                    printf "\n  ${COLOR_RED}[$level]: [X] $info${COLOR_CLOSE}\n"; 
+                    printf "${COLOR_RED}[$level]: [X] $info${COLOR_CLOSE}\n"; 
                 else
-                    printf "  ${COLOR_RED}[$level]: [X] $info${COLOR_CLOSE}\n"; 
+                    printf "${COLOR_RED}[$level]: [X] $info${COLOR_CLOSE}\n"; 
                 fi
             #fi
             
-            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
-            echo -e "`$NOW_TIME`\t[$MY_HOSTNAME]\t[$level]\t${COLOR_RED}$info${COLOR_CLOSE}" &>>${callerlog}
+            echo -e "`$NOW_TIME`  [$MY_HOSTNAME:$caller]  [$level]  $info" &>>${LOG_DIR}/${MAIN_LOG}
+            echo -e "`$NOW_TIME`  [$MY_HOSTNAME]  [$level]  ${COLOR_RED}$info${COLOR_CLOSE}" &>>${callerlog}
             
             
             # error but not exit
@@ -129,9 +129,9 @@ Log() {
             # 标准输出重定向到标准错误
             #exec 1>&2
             if [ "$FUNCNAME" = "Remote_Exec" ]; then
-                echo -e "  More detail: ${UNDERLINE}ssh host tail -50 $THIS_LOG${NORMAL}"
+                echo -e "More detail: ${UNDERLINE}ssh host tail -50 $THIS_LOG${NORMAL}"
             else
-                echo -e "  More detail: ${UNDERLINE}tail -50 $THIS_LOG${NORMAL}"
+                echo -e "More detail: ${UNDERLINE}tail -50 $THIS_LOG${NORMAL}"
             fi
             echo 
             exit 1
@@ -139,7 +139,7 @@ Log() {
         SUCC)
             # print to screen
             #if Is_TTY; then
-                printf "  ${COLOR_GREEN}[$level ]: [√]$info${COLOR_CLOSE}\n\n"; 
+                printf "${COLOR_GREEN}[$level ]: [√]$info${COLOR_CLOSE}\n\n"; 
             #fi
 
             echo -e "`$NOW_TIME`\t[$MY_HOSTNAME:$caller]\t[$level ]\t$info" &>>${LOG_DIR}/${MAIN_LOG}
@@ -147,7 +147,7 @@ Log() {
         ;;
 
         *)
-            echo -e "  Function Log() error! Usage: Log [LEVEL] <INFORMATION>\n"
+            echo -e "Function Log() error! Usage: Log [LEVEL] <INFORMATION>\n"
             exit 250
         ;;
     esac
