@@ -373,7 +373,7 @@ Prepare_Repo() {
 ######################################################################
 Install_Basic_Soft() {
 
-    Log DEBUG "Installing basic software..."
+    Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     softlist="bash-completion rsync  python-pip ipmitool \
     net-tools  pciutils iotop mycli ifstat locales bmon \
     lsscsi  smartmontools htop ntp  fio bc nmon wget "
