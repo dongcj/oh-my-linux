@@ -4,62 +4,6 @@
 # description: 
 #
 
-######################################################################
-# 作用: 更新repo metadata
-# 用法: Update_RepoData </RPM/PATH/>
-# 注意：
-######################################################################
-Update_RepoData() {
-
-    yum_root="/var/www/html/Ceph-AI-Packages"
-
-    # create repo
-    arch_arr='x86_64 noarch dep'
-
-    for arch in $arch_arr; do
-        Log -n DEBUG "creating $arch repo"
-        if createrepo -d -p --update -s sha $yum_root/$arch >/dev/null; then 
-            Log DEBUG "success"
-        else
-            Log ERROR "failed"
-        fi
-    done
-    
-    Log DEBUG ""
-
-}
-
-######################################################################
-# 作用: 准备所有服务器的repo
-# 用法: Repo_Prepare
-# 注意：
-######################################################################
-Repo_Prepare() {
-
-    Log DEBUG "preparing yum repo..."
-    # install the ceph key
-    Run rpm --import http://${CEPH_AI_VM_NAME}/Ceph-AI-Packages/base-release.asc
-    Run rpm --import http://${CEPH_AI_VM_NAME}/Ceph-AI-Packages/ceph-release.asc
-    Run rpm --import http://${CEPH_AI_VM_NAME}/Ceph-AI-Packages/dep-release.asc
-    
-    # backup the repo
-    mkdir -p /etc/yum.repos.d/bak/
-    find /etc/yum.repos.d/ -maxdepth 1 -type f -not -name 'Ceph-AI.repo' -exec mv {} /etc/yum.repos.d/bak/ \;
-
-    # config the yum.conf
-    sed -i 's/bugtracker_url=.*/bugtracker_url=http://${REPORT_SERVER}/rpmbug' /etc/yum.conf
-    
-    # get the latest repo
-    Log DEBUG "get Ceph_AI.repo to /etc/yum.repos.d/"
-    Conf_Replacer ${CONF_DIR}/Ceph_AI.repo.conf  /etc/yum.repos.d/Ceph_AI.repo  CEPH_AI_VM_HOSTNAME
-    
-    # DO NOT use, because the wget is not install now
-    #Run wget -N -P /etc/yum.repos.d/ http://${CEPH_AI_VM_NAME}/Ceph-AI-Packages/Ceph-AI.repo
-    
-    Run yum clean all
-    yum --disablerepo=\* --enablerepo=DVD-HTTP,local_ceph,local_ceph-noarch local_dep makecache
-    Log SUCC "prepare yum repo successful."
-}
 
 
 

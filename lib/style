@@ -6,6 +6,8 @@
 NOW_TIME='eval date "+%Y-%m-%d %H:%M:%S"'
 NOW_TIME_PATH='eval date "+%Y%m%d%H%M%S"'
 
+[ -z "`cat ~/.bashrc | grep ^PS1`" ] && \
+  echo 'PS1="\[\e[37;40m\][\[\e[32;40m\]\u\[\e[37;40m\]@\h \[\e[35;40m\]\W\[\e[0m\]]\\$ "' >> ~/.bashrc 
 
 
 ############################# Dialog Style #############################
