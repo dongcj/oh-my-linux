@@ -1277,18 +1277,25 @@ Get_MEMInfo() {
     MEM_INFO=`cat /proc/meminfo`
     _MEMORY_TOTAL=`echo "$MEM_INFO" | grep MemTotal | awk  '{print $2}'`
     MEMORY_TOTAL=`printf "%G" $(echo "scale = 1; $_MEMORY_TOTAL/1024/1002" | bc)`
+    
     _MEMORY_FREE=`echo "$MEM_INFO" | grep MemFree | awk  '{print $2}'`
     MEMORY_FREE=`printf "%G" $(echo "scale = 1; $_MEMORY_FREE/1024/1002" | bc)`
-    MEMORY_INFO=`dmidecode --type 17 | grep Speed`
-    MEMORY_SLOT=`echo "$MEMORY_INFO" | wc -l`
-    MEMORY_NUMBER=`echo "$MEMORY_INFO" | grep MHz | wc -l`
-    # memory speed maybe
+    
+    MEMORY_INFO=`dmidecode --type 17`
+    MEMORY_SLOT=`echo "$MEMORY_INFO" | grep " Speed: " | wc -l`
+    
+    MEMORY_TYPE=`echo "$MEMORY_INFO" | grep "Type: " | awk '{print $2}' | sort | uniq`
+    MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep " Speed: " | grep "MHz" | wc -l`
+    
+    # memory speed 
     MEMORY_SPEED=`echo "$MEMORY_INFO" | grep MHz |  sed -n 's/.*Speed: \(.*\) MHz/\1/p' | sort | uniq`
-
+    
+    
     Log DEBUG " --MEMORY_TOTAL=${MEMORY_TOTAL} GB"
     Log DEBUG " --MEMORY_FREE=${MEMORY_FREE} GB"
     Log DEBUG " --MEMORY_SLOT=$MEMORY_SLOT"
-    Log DEBUG " --MEMORY_NUMBER=$MEMORY_NUMBER"
+    Log DEBUG " --MEMORY_SLOTUSED=$MEMORY_SLOTUSED"
+    Log DEBUG " --MEMORY_TYPE=$MEMORY_TYPE"
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
     
     Log SUCC "Get Memory info successful."
