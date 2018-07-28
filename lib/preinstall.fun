@@ -1253,7 +1253,7 @@ Get_CPUInfo() {
     CPU_CORE=`if [ "$CPU_IFHT" -eq 1 ];then printf "%d" $((CPU_THREAD/2));else echo $CPU_THREAD;fi`
     CPU_SPEED=`grep 'cpu MHz' /proc/cpuinfo | sort | sed -n '$p' | awk '{printf "%d", $NF}'`
     CPU_FAMILY=`if grep AuthenticAMD /proc/cpuinfo >/dev/null; then echo AMD; elif grep \
-                Intel /proc/cpuinfo >/dev/null; then echo Intel; else echo unknown; fi`
+                Intel /proc/cpuinfo >/dev/null; then echo Intel; else echo Unknown; fi`
     CPU_MODELNAME=`grep "model name" /proc/cpuinfo | uniq | awk -F":" '{print $2}' | sed 's/           / /' | xargs`
 
     Log DEBUG " --CPU_THREAD=$CPU_THREAD"
@@ -1290,14 +1290,17 @@ Get_MEMInfo() {
     MEMORY_SLOT=`echo "$MEMORY_INFO" | grep " Speed: " | wc -l`
     
     MEMORY_TYPE=`echo "$MEMORY_INFO" | grep "Type: " | awk '{print $2}' | sort | uniq`
-    MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep " Speed: " | egrep "MHz|MT" | wc -l`
+    MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep "Configured Clock Speed" | wc -l`
     
     # memory speed 
     MEMORY_SPEED=`echo "$MEMORY_INFO" | grep " *Speed: " | grep -v Clock | \
     sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
     
+    MEMORY_SPEED=${MEMORY_SPEED:-"Unknown"}
+    
     MEMORY_SPEEDCONFIGURED=`echo "$MEMORY_INFO" | grep " Speed: " | egrep "MHz|MT" | \
     sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
+    MEMORY_SPEEDCONFIGURED=${MEMORY_SPEEDCONFIGURED:-"Unknown"}
     
     MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | \
     sed -n 's/.*Manufacturer: \(.*\)/\1/p' | sort | uniq | xargs`
@@ -1432,7 +1435,7 @@ Get_DiskInfo() {
 
             # get the disk Rotation Rate
             disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
-            [ -z "$disk_rotation_rate" ] && disk_rotation_rate="unknown"
+            [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
             # get disk rotation rate
             DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
@@ -1455,7 +1458,7 @@ Get_DiskInfo() {
 
                 # get the disk Rotation Rate
                 disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
-                [ -z "$disk_rotation_rate" ] && disk_rotation_rate="unknown"
+                [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
                 # get disk rotation rate
                 DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
@@ -1651,7 +1654,7 @@ Get_NetInfo() {
             NET_USE_ETHER_TYPE=bond
 
         else
-            NET_USE_ETHER_TYPE=unknown
+            NET_USE_ETHER_TYPE=Unknown
 
         fi
 
