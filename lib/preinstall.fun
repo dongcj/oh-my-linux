@@ -373,6 +373,7 @@ Prepare_Repo() {
 ######################################################################
 Install_Basic_Soft() {
 
+    Log DEBUG "Installing basic software..."
     softlist="bash-completion rsync  python-pip ipmitool \
     net-tools  pciutils iotop mycli ifstat locales bmon \
     lsscsi  smartmontools htop ntp  fio bc nmon wget "
@@ -396,6 +397,7 @@ Install_Basic_Soft() {
         Run yum -y -q install hpacucli
     fi
     
+    Log SUCC "Install successful..."
 }
 
 
@@ -406,8 +408,9 @@ Install_Basic_Soft() {
 # 注意：
 ######################################################################
 Config_NTP_Server() {
-    Log -n DEBUG "Config ntp server"
 
+    Log -n DEBUG "Config ntp server"
+    
     ntp_conf_file=/etc/ntp.conf
     if [ -f $ntp_conf_file ]; then
         if ! grep -q "server * 127.127.1.0" $ntp_conf_file; then
@@ -420,7 +423,6 @@ Config_NTP_Server() {
     # auto start ntp server
     Run systemctl enable  ntpd.service
     Run systemctl restart ntpd.service
-
 
     Log DEBUG ""
 }
