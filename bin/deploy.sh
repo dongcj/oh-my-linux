@@ -2,7 +2,6 @@
 ## CopyRight  krrishdo@gmail.com
 ## Author: Krrish
 
-set -e
 
 echo "$*" | grep -iq "force" && \
     rm -rf /etc/serverinfo
