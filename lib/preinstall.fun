@@ -1645,9 +1645,13 @@ Get_NetInfo() {
     #IP_ADDRESS=`ip addr show eth0 | awk '/inet /{split($2,x,"/");print x[1]}'`
     NETWORK_IPADDR=`echo ${IP_ADDRESS_NETMASK} | awk '{print $1}'`
     NETWORK_IPMASK=`echo ${IP_ADDRESS_NETMASK} | awk '{print $2}'`
-
-    NETWORK_GATEWAY=`grep "^GATEWAY" /etc/sysconfig/network-scripts/ifcfg-$NET_USE_ETHER | awk -F"=" '{print $2}' | sed -n '1p'`
-
+    
+    if [ -f /etc/network/interfaces ]; then
+        NETWORK_GATEWAY=`grep -i "^ *gateway" /etc/network/interfaces | awk -F"=" '{print $2}' | sed -n '1p'`
+     elif [ -f /etc/sysconfig/network-scripts/ifcfg-$NET_USE_ETHER ]; then
+        NETWORK_GATEWAY=`grep "^ *GATEWAY=" /etc/sysconfig/network-scripts/ifcfg-$NET_USE_ETHER | awk -F"=" '{print $2}' | sed -n '1p'`
+     fi
+     
     [ -z "$NETWORK_GATEWAY" ] && NETWORK_GATEWAY=`netstat -rn | grep "UG" |grep "^0.0.0.0" | sed -n '1p' | awk '{print $2}'` && \
     Log WARN "can NOT find \"GATEWAY\" in ifcfg-$NET_USE_ETHER, use \"ip route\" to get GATEWAY=$NETWORK_GATEWAY"
 
