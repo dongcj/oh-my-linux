@@ -375,7 +375,7 @@ Install_Basic_Soft() {
 
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
-    softlist="bash-completion rsync  python-pip ipmitool \
+    softlist="bash-completion rsync  python-pip hdparm ipmitool \
     net-tools  pciutils iotop mycli ifstat locales bmon \
     lsscsi  smartmontools htop ntp  fio bc nmon wget "
     softlist=`echo $softlist`
@@ -1372,8 +1372,8 @@ Get_DiskInfo() {
         _DISK_SIZE=`fdisk -l /dev/$i 2>/dev/null | grep bytes | sed -n '1p' | awk '{print $(NF - 3)}'`
         DISK_SIZE="$DISK_SIZE $i:$((`echo $_DISK_SIZE | tr ' ' '*'`/1000/1000/999))"
 
-        # check if disk in raid(1 in radi, 0 not in raid)
-        _DISK_ISINRAID=`if hdparm -i /dev/$i 2>/dev/null | grep -q Model; then echo 0; else echo 1; fi`
+        # check if disk in raid(1 in raid, 0 not in raid)
+        _DISK_ISINRAID=`if hdparm -i /dev/$i 2>/dev/null | grep -q Model; then echo 1; else echo 0; fi`
         DISK_ISINRAID="$DISK_ISINRAID $i:$_DISK_ISINRAID"
     done
     DISK_SIZE=`echo $DISK_SIZE`
@@ -1406,7 +1406,6 @@ Get_DiskInfo() {
         # is vm?
         if echo $disk_path | grep -q "/dev/vd[a-z]"; then
             Log WARN " --disk_path contain \"vd\", might be a vm"
-            disk_rotation_rate="unknown"
         else
             # test disk info
             disk_info=`smartctl -i $disk_path`
@@ -1495,13 +1494,13 @@ Get_DiskInfo() {
 
     Log DEBUG " --DISK_LIST=\"$DISK_LIST\""
     Log DEBUG " --DISK_PATH=\"$DISK_PATH\""
-    Log DEBUG " --DISK_SIZE=\"DISK_SIZE\""
+    Log DEBUG " --DISK_SIZE=\"$DISK_SIZE\""
     Log DEBUG " --DISK_COUNT=$DISK_COUNT"
     Log DEBUG " --DISK_ROOT=$DISK_ROOT"
     Log DEBUG " --DISK_BOOT=$DISK_BOOT"
-    Log DEBUG " --DISK_ROOTTYPE=$DISK_ROOTTYPE"
+    Log DEBUG " --DISK_ROOTTYPE=\"$DISK_ROOTTYPE\""
     Log DEBUG " --DISK_INLVM_RAID=\"$DISK_INLVM_RAID\""
-    Log DEBUG " --DISK_ROOTSIZE=$DISK_ROOTSIZE"
+    Log DEBUG " --DISK_ROOTSIZE=\"$DISK_ROOTSIZE} GB\""
     Log DEBUG " --DISK_RAIDCARD=\"$DISK_RAIDCARD\""
     Log DEBUG " --DISK_ROTATION_RATE_LIST=\"$DISK_ROTATION_RATE_LIST\""
     Log DEBUG " --DISK_ISINRAID=\"$DISK_ISINRAID\""
