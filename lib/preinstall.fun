@@ -1782,13 +1782,13 @@ Check_OS_Distrib(){
    RELEASE_FILE=/etc/*-release
    if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" $RELEASE_FILE; then
        OS=CentOS
-       PKG_INST_CMD="yum -y -q install"
+       PKG_INST_CMD="yum -y install"
    elif grep -Eqi "Debian" /etc/issue || grep -Eq "Debian" $RELEASE_FILE; then
        OS=Debian
-       PKG_INST_CMD="apt -y -q install"
+       PKG_INST_CMD="apt -y install"
    elif grep -Eqi "Ubuntu" /etc/issue || grep -Eq "Ubuntu" $RELEASE_FILE; then
        OS=Ubuntu
-       PKG_INST_CMD="apt -y -q install"
+       PKG_INST_CMD="apt -y install"
    elif grep -Eqi "Alpine" /etc/issue || grep -Eq "Alpine" $RELEASE_FILE; then
        OS=Alpine
        PKG_INST_CMD="apk -y -q install"
