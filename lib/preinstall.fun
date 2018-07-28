@@ -384,12 +384,12 @@ Install_Basic_Soft() {
     if [ "$OS" = "Ubuntu" ]; then
     
         # prepare the apt
-        dpkg --configure -a &>/dev/null
-        apt autoremove &>/dev/null
+        Run dpkg --configure -a
+        Run apt autoremove
         
         which chkconfig || { rm -rf /usr/bin/chkconfig && \
         Run $PKG_INST_CMD sysv-rc-conf rcconf && \
-        ln -s /usr/sbin/sysv-rc-conf /usr/bin/chkconfig; }
+        Run ln -s /usr/sbin/sysv-rc-conf /usr/bin/chkconfig; }
     fi
     
     Run $PKG_INST_CMD $softlist
