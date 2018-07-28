@@ -1320,11 +1320,12 @@ Get_DiskInfo() {
 
     # disk list & count
     DISK_LIST=`echo "$blkinfo" | grep disk | awk '{print $1}' | xargs`
-    DISK_PATH=`lsscsi | grep disk | awk '{print $NF}' | xargs`
+    DISK_PATH=`echo "$DISK_LIST" | sed 's/^/\/dev\//' | xargs`
+    
     DISK_COUNT=`echo ${DISK_LIST} | wc -w | xargs`
 
     # root disk
-    DISK_ROOTTYPE=`echo "$blkinfo" | grep -w "/" | awk '{print $(NF-1)}'`
+    DISK_ROOTTYPE=`echo "$blkinfo" | grep -w "part /" | awk '{print $(NF-1)}'`
 
     # get the root volume/partition
     root_vol_or_part=`lsblk  --output NAME,MOUNTPOINT -P | grep "MOUNTPOINT=\"/\"" | sed -n 's/NAME="\(.*\)" MOUNTPOINT=.*/\1/p'`
@@ -1404,7 +1405,7 @@ Get_DiskInfo() {
         
         # is vm?
         if echo $disk_path | grep -q "/dev/vd[a-z]"; then
-            Log DEBUG " --$disk_path is $disk_path, might be a vm"
+            Log WARN " --disk_path contain \"vd\", might be a vm"
             disk_rotation_rate="unknown"
         else
             # test disk info
