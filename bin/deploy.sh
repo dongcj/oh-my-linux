@@ -80,6 +80,9 @@ Get_SystemInfo
 
 Get_OSInfo
 
+Get_CPUInfo
+Get_MEMInfo
+Get_DiskInfo
 
 
 

@@ -1213,7 +1213,7 @@ Get_OSInfo() {
 
     OS_DISTRIBUTION=${OS}
     OS_FAMILY=`uname`
-    [ "$OS_FAMILY" != "Linux" ] && { Log WARN "Not Linux? exit"; return 1; }
+    [ "$OS_FAMILY" != "Linux" ] && { Log ERROR "Not Linux? exit"; return 1; }
     OS_VERSION=`cat $RELEASE_FILE | awk '{print $((NF-1))}'`
     OS_ARCH=`arch`;OS_BIT=`getconf LONG_BIT`
     OS_HOSTID=`hostid`
@@ -1225,7 +1225,8 @@ Get_OSInfo() {
     Log DEBUG " --OS_ARCH=$OS_ARCH"
     Log DEBUG " --OS_HOSTID=$OS_HOSTID"
     Log DEBUG " --OS_HOSTNAME=$OS_HOSTNAME"
-    Log DEBUG ""
+    
+    Log SUCC "Get OS info successful."
 
 }
 
@@ -1238,7 +1239,8 @@ Get_OSInfo() {
 ######################################################################
 Get_CPUInfo() {
 
-    Log DEBUG "Get CPU info..."
+    Log DEBUG "${COLOR_YELLOW}Getting CPU info...${COLOR_CLOSE}"
+    
     CPU_THREAD=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`
     CPU_PHYSICAL=`grep "physical id" /proc/cpuinfo | sort | uniq | wc -l`
     # if cpu has HT, one core has more than 2 (inclue 2) threads;
@@ -1256,7 +1258,8 @@ Get_CPUInfo() {
     Log DEBUG " --CPU_SPEED=$CPU_SPEED"
     Log DEBUG " --CPU_FAMILY=$CPU_FAMILY"
     Log DEBUG " --CPU_MODELNAME=\"$CPU_MODELNAME\""
-    Log DEBUG ""
+    
+    Log SUCC "Get CPU info successful."
 }
 
 
@@ -1269,7 +1272,8 @@ Get_CPUInfo() {
 ######################################################################
 Get_MEMInfo() {
 
-    Log DEBUG "Get MEMORY info..."
+    Log DEBUG "${COLOR_YELLOW}Getting Memory info...${COLOR_CLOSE}"
+    
     MEM_INFO=`cat /proc/meminfo`
     _MEMORY_TOTAL=`echo "$MEM_INFO" | grep MemTotal | awk  '{print $2}'`
     MEMORY_TOTAL=`printf "%G" $(echo "scale = 0; $_MEMORY_TOTAL/1024/1002" | bc)`
@@ -1286,7 +1290,8 @@ Get_MEMInfo() {
     Log DEBUG " --MEMORY_SLOT=$MEMORY_SLOT"
     Log DEBUG " --MEMORY_NUMBER=$MEMORY_NUMBER"
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
-    Log DEBUG ""
+    
+    Log SUCC "Get Memory info successful."
 
 }
 
@@ -1302,7 +1307,7 @@ Get_MEMInfo() {
 ######################################################################
 Get_DiskInfo() {
 
-    Log DEBUG "Get DISK info..."
+    Log DEBUG "${COLOR_YELLOW}Getting Disk info...${COLOR_CLOSE}"
 
     # formated lsblk
     blkinfo=`lsblk | sed '/disk/{x;p;x;}' | sed -n '1!p'`
@@ -1477,7 +1482,8 @@ Get_DiskInfo() {
     Log DEBUG " --DISK_SATA=\"$DISK_SATA\""
     Log DEBUG " --DISK_SSD=\"$DISK_SSD\""
     Log DEBUG " --DISK_MOUNTED=\"$DISK_MOUNTED\""
-    Log DEBUG ""
+
+    Log SUCC "Get Disk info successful."
 
 }
 
