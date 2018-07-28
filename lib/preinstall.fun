@@ -385,11 +385,16 @@ Install_Basic_Soft() {
     
         # prepare the apt
         Run dpkg --configure -a
-        Run apt autoremove
+        Run apt -y autoremove
         
         which chkconfig || { rm -rf /usr/bin/chkconfig && \
         Run $PKG_INST_CMD sysv-rc-conf rcconf && \
         Run ln -s /usr/sbin/sysv-rc-conf /usr/bin/chkconfig; }
+        
+    elif [ "$OS" = "CentOS" ]; then
+        if ! rpm -qa | grep -iq epel; then
+            yum install -y epel-release
+         fi
     fi
     
     Run $PKG_INST_CMD $softlist
@@ -1285,11 +1290,17 @@ Get_MEMInfo() {
     MEMORY_SLOT=`echo "$MEMORY_INFO" | grep " Speed: " | wc -l`
     
     MEMORY_TYPE=`echo "$MEMORY_INFO" | grep "Type: " | awk '{print $2}' | sort | uniq`
-    MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep " Speed: " | grep "MHz" | wc -l`
+    MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep " Speed: " | egrep "MHz|MT" | wc -l`
     
     # memory speed 
-    MEMORY_SPEED=`echo "$MEMORY_INFO" | grep MHz |  sed -n 's/.*Speed: \(.*\) MHz/\1/p' | sort | uniq`
+    MEMORY_SPEED=`echo "$MEMORY_INFO" | grep " *Speed: " | grep -v Clock | \
+    sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
     
+    MEMORY_SPEEDCONFIGURED=`echo "$MEMORY_INFO" | grep " Speed: " | egrep "MHz|MT" | \
+    sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
+    
+    MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | \
+    sed -n 's/.*Manufacturer: \(.*\)/\1/p' | sort | uniq | xargs`
     
     Log DEBUG " --MEMORY_TOTAL=${MEMORY_TOTAL} GB"
     Log DEBUG " --MEMORY_FREE=${MEMORY_FREE} GB"
@@ -1297,6 +1308,8 @@ Get_MEMInfo() {
     Log DEBUG " --MEMORY_SLOTUSED=$MEMORY_SLOTUSED"
     Log DEBUG " --MEMORY_TYPE=$MEMORY_TYPE"
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
+    Log DEBUG " --MEMORY_SPEEDCONFIGURED=$MEMORY_SPEEDCONFIGURED"
+    Log DEBUG " --MEMORY_MANUFACTURER=$MEMORY_MANUFACTURER"
     
     Log SUCC "Get Memory info successful."
 
