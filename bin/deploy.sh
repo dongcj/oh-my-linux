@@ -2,6 +2,8 @@
 ## CopyRight  krrishdo@gmail.com
 ## Author: Krrish
 
+set -euo pipefail
+
 ## Show the system configuration
 ShowInfo(){
     clear
