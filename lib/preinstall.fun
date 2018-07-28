@@ -1396,61 +1396,76 @@ Get_DiskInfo() {
     # test disk sata or ssd
     unset DISK_ROTATION_RATE_LIST
     scsi_disk_info=`lsscsi | grep disk`
-    while read line; do
+    
+    if [ -z "$scsi_disk_info" ]; then
+    
+        # use blkid to detect
+        disk_path=`blkid | awk -F': ' '{print $1}'`
+        
+        # is vm?
+        if echo $disk_path | grep -q "/dev/vd[a-z]"; then
+            Log DEBUG " --$disk_path is $disk_path, might be a vm"
+            disk_rotation_rate="unknown"
+         else
+         
+         fi
+            
+    else
+        while read line; do
 
-        disk_path=`echo $line | awk '{print $NF}'`
-        raidcard_brand=`echo $line | awk '{print $3}'`
+            disk_path=`echo $line | awk '{print $NF}'`
+            raidcard_brand=`echo $line | awk '{print $3}'`
+            
+            # if is ATA
+            if [ "$raidcard_brand" = "ATA"]; then
 
-        # if is ATA
-        if [ "$raidcard_brand" = "ATA" ]; then
+                Log DEBUG " --$disk_path is JBOD mode"
 
-            Log DEBUG " --$disk_path is JBOD mode"
+                # test disk info
+                disk_info=`smartctl -i $disk_path`
 
-            # test disk info
-            disk_info=`smartctl -i $disk_path`
+                # get the disk Rotation Rate
+                disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
+                [ -z "$disk_rotation_rate" ] && disk_rotation_rate="unknown"
 
-            # get the disk Rotation Rate
-            disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
-            [ -z "$disk_rotation_rate" ] && disk_rotation_rate="unknown"
+                # get disk rotation rate
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
-            # get disk rotation rate
-            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
+            # if it is LSI raid, use "MegaCli64 -pdlist –aALL"
+            elif [ "$raidcard_brand" = "LSI" ]; then
 
-        # if it is LSI raid, use "MegaCli64 -pdlist –aALL"
-        elif [ "$raidcard_brand" = "LSI" ]; then
+                Log DEBUG " --$disk_path under control $raidcard_brand"
 
-            Log DEBUG " --$disk_path under control $raidcard_brand"
+                MEGACLI="/opt/MegaRAID/MegaCli/MegaCli64"
 
-            MEGACLI="/opt/MegaRAID/MegaCli/MegaCli64"
+                # TODO: currently, only LSI raid card support
 
-            # TODO: currently, only LSI raid card support
+                # show all the physical disk info
+                MEGA_PDLIST_INFO=`$MEGACLI -PDList -aAll`
 
-            # show all the physical disk info
-            MEGA_PDLIST_INFO=`$MEGACLI -PDList -aAll`
+                # "scsi_dev_num" get from lsscsi
+                scsi_dev_num=`echo $line | awk '{print $1}' | awk -F':' '{print $3}'`
 
-            # "scsi_dev_num" get from lsscsi
-            scsi_dev_num=`echo $line | awk '{print $1}' | awk -F':' '{print $3}'`
+                # get the slot number of MEGA_PDLIST_INFO
+                this_slot_info=`echo "$MEGA_PDLIST_INFO" | sed -n "/Slot Number: $scsi_dev_num/, /Drive has flagged a S.M.A.R.T alert/p"`
 
-            # get the slot number of MEGA_PDLIST_INFO
-            this_slot_info=`echo "$MEGA_PDLIST_INFO" | sed -n "/Slot Number: $scsi_dev_num/, /Drive has flagged a S.M.A.R.T alert/p"`
+                # get the disk info
+                disk_rotation_rate=`echo "$this_slot_info" | grep "Media Type" | awk -F':' '{print $2}' | sed -n '1p'`
+                disk_rotation_rate=`echo $disk_rotation_rate`
 
-            # get the disk info
-            disk_rotation_rate=`echo "$this_slot_info" | grep "Media Type" | awk -F':' '{print $2}' | sed -n '1p'`
-            disk_rotation_rate=`echo $disk_rotation_rate`
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
-            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
+            # other not been tested
+            else
+                Log ERROR "i DO NOT know the disk $disk_path under control raid card: $raidcard_brand, now only support LSI(MegaRaid) and JBOD"
+            fi
 
-        # other not been tested
-        else
-            Log ERROR "i DO NOT know the disk $disk_path under control raid card: $raidcard_brand, now only support LSI(MegaRaid) and JBOD"
-        fi
-
-    done <<<"$scsi_disk_info"
-
+        done <<<"$scsi_disk_info"
+    fi
 
     DISK_ROTATION_RATE_LIST=`echo $DISK_ROTATION_RATE_LIST`
 
-    [ -z "$DISK_ROTATION_RATE_LIST" ] && Log ERROR "can NOT get the disk rotation rate info!!"
+    # [ -z "$DISK_ROTATION_RATE_LIST" ] && Log ERROR "can NOT get the disk rotation rate info!!"
 
     # get the sata & ssd disk
     unset DISK_SSD DISK_SATA
