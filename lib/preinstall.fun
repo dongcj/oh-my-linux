@@ -374,6 +374,7 @@ Prepare_Repo() {
 Install_Basic_Soft() {
 
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
+    
     softlist="bash-completion rsync  python-pip ipmitool \
     net-tools  pciutils iotop mycli ifstat locales bmon \
     lsscsi  smartmontools htop ntp  fio bc nmon wget "
@@ -383,6 +384,11 @@ Install_Basic_Soft() {
     
     # add chkconfig for ubuntu
     if [ "$OS" = "Ubuntu" ]; then
+    
+        # prepare the apt
+        dpkg --configure -a
+        apt autoremove
+        
         which chkconfig || { rm -rf /usr/bin/chkconfig && \
         Run $PKG_INST_CMD sysv-rc-conf rcconf && \
         ln -s /usr/sbin/sysv-rc-conf /usr/bin/chkconfig; }
