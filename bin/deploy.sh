@@ -78,6 +78,11 @@ Install_Basic_Soft
 
 Get_SystemInfo
 
+Get_OSInfo
+
+
+
+
 
 # Config_SSH_Server
 

@@ -403,7 +403,7 @@ Install_Basic_Soft() {
         Run yum -y -q install hpacucli
     fi
     
-    Log SUCC "Install basic software successful..."
+    Log SUCC "Install basic software successful."
 }
 
 
@@ -1186,7 +1186,7 @@ EOF
 ######################################################################
 Get_SystemInfo() {
 
-    Log DEBUG "Getting system info..."
+    Log DEBUG "${COLOR_YELLOW}Getting system info...${COLOR_CLOSE}"
     DMIDECODE=`dmidecode -t system`
     SYSTEM_MANUFACTURER=`echo "$DMIDECODE" | grep 'Manufacturer' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_PRODUCTNAME=`echo "$DMIDECODE" | grep 'Product Name' | head -n 1 | cut -f 2 -d':' | xargs`
@@ -1198,7 +1198,7 @@ Get_SystemInfo() {
     Log DEBUG " --SYSTEM_SERIALNUMBER=$SYSTEM_SERIALNUMBER"
     Log DEBUG " --SYSTEM_UUID=$SYSTEM_UUID"
     
-    Log SUCC "Get system info successful..."
+    Log SUCC "Get system info successful."
 }
 
 
