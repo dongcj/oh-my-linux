@@ -1406,9 +1406,18 @@ Get_DiskInfo() {
         if echo $disk_path | grep -q "/dev/vd[a-z]"; then
             Log DEBUG " --$disk_path is $disk_path, might be a vm"
             disk_rotation_rate="unknown"
-         else
-         
-         fi
+        else
+            # test disk info
+            disk_info=`smartctl -i $disk_path`
+
+            # get the disk Rotation Rate
+            disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
+            [ -z "$disk_rotation_rate" ] && disk_rotation_rate="unknown"
+
+            # get disk rotation rate
+            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
+
+        fi
             
     else
         while read line; do
