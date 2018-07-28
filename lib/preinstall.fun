@@ -1528,6 +1528,10 @@ Get_NetInfo() {
 
     NETWORK_PCI_INFO=`lspci | grep "Ethernet controller"`
     NETWORK_PCIETHER_COUNT=`echo "$NETWORK_PCI_INFO" | wc -l`
+    
+    if echo $NETWORK_PCI_INFO | grep -q Virtio; then
+        Log WARN "Virtio network device found, might be a vm"
+    fi
 
     NETWORK_PCIETHER_1G_COUNT=`echo "$NETWORK_PCI_INFO" | grep " Gigabit Ethernet" | wc -l`
     NETWORK_PCIETHER_1G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " Gigabit Ethernet" | \
@@ -1537,7 +1541,7 @@ Get_NetInfo() {
     NETWORK_PCIETHER_10G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit Ethernet" | \
     sed "s/.*Ethernet controller: \(.*\) 10-Gigabit .*/\1/" | sort | uniq`
 
-    NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo | tr -d ':'`
+    NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo | tr -d ':' | xargs`
 
     # get the physical ether
     unset NETWORK_PHYETHERS
