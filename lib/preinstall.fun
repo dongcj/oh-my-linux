@@ -1214,7 +1214,7 @@ Get_OSInfo() {
     OS_DISTRIBUTION=${OS}
     OS_FAMILY=`uname`
     [ "$OS_FAMILY" != "Linux" ] && { Log ERROR "Not Linux? exit"; return 1; }
-    OS_VERSION=`cat $RELEASE_FILE | awk '{print $((NF-1))}'`
+    OS_VERSION=`cat $RELEASE_FILE | grep ${OS} | sed -n '$p'  | awk '{print $((NF-1))}'`
     OS_ARCH=`arch`;OS_BIT=`getconf LONG_BIT`
     OS_HOSTID=`hostid`
     OS_HOSTNAME=${MY_HOSTNAME}
@@ -1314,7 +1314,8 @@ Get_DiskInfo() {
 
     # if there are mutlipath
     if echo "$blkinfo" | grep -q mpath; then
-        dmsetup remove_all
+        Log WARN "mutlipath found, disk info might not correct."
+    #   dmsetup remove_all
     fi
 
     # disk list & count
