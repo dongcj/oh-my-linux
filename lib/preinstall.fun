@@ -1538,7 +1538,6 @@ Get_NetInfo() {
     sed "s/.*Ethernet controller: \(.*\) Network Connection/\1/" | sort | uniq`
 
     NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo | tr -d ':'`
-    NETWORK_ALLETHERS=`echo $NETWORK_ALLETHERS`
 
     # get the physical ether
     unset NETWORK_PHYETHERS
@@ -1552,7 +1551,7 @@ Get_NetInfo() {
     NETWORK_PHYETHERS_COUNT=`echo $NETWORK_PHYETHERS | wc -w`
 
     [ $NETWORK_PCIETHER_COUNT -ne $NETWORK_PHYETHERS_COUNT ] && \
-    Log ERROR "NETWORK_PCIETHER_COUNT=$NETWORK_PCIETHER_COUNT; NETWORK_PHYETHERS_COUNT=$NETWORK_PHYETHERS_COUNT"
+    Log WARN "NETWORK_PCIETHER_COUNT=$NETWORK_PCIETHER_COUNT; NETWORK_PHYETHERS_COUNT=$NETWORK_PHYETHERS_COUNT. might be a vm"
 
 
     # add a temp ip to unlinkd ether
