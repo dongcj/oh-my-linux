@@ -4,6 +4,12 @@
 
 set -e
 
+echo "$*" | grep -iq "force" && \
+    rm -rf /etc/serverinfo
+
+[ -f /etc/serverinfo ] && echo && \
+  cat /etc/serverinfo && exit 0
+
 ## Show the system configuration
 ShowInfo(){
     clear
@@ -70,5 +76,9 @@ Check_OS_Distrib
 
 Install_Basic_Soft
 
+Get_SystemInfo
 
-ShowInfo
+
+# Config_SSH_Server
+
+# ShowInfo

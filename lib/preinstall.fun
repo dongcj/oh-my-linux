@@ -403,7 +403,7 @@ Install_Basic_Soft() {
         Run yum -y -q install hpacucli
     fi
     
-    Log SUCC "Install successful..."
+    Log SUCC "Install basic software successful..."
 }
 
 
@@ -478,7 +478,7 @@ EOF
 
 
 ######################################################################
-# 作用: 设置Hosts文件和hostname
+# 作用: 设置 Hosts 文件和 hostname
 # 用法: Set_Hosts_Hostname
 # 注意：
 ######################################################################
@@ -518,20 +518,47 @@ Set_Hosts_Hostname() {
 
 
 ######################################################################
-# 作用: 加快SSH访问速度及SSH其它一些相关配置
-# 用法: Set_SSH_Server
+# 作用: 加快 SSH 访问速度及SSH其它一些相关配置
+# 用法: Config_SSH_Server
 # 注意：
 ######################################################################
-Set_SSH_Server() {
-    Log -n DEBUG "Config sshd server..."
-    sed -i '/UseDNS/s/.*/UseDNS no/' /etc/ssh/sshd_config
+Config_SSH_Server() {
+    Log -n DEBUG "Configing ssh server..."
 
-    # Make ssh faster and faster...
-    sed -i "/^[[:space:]]*GSSAPIAuthentication/s/.*/GSSAPIAuthentication no/" /etc/ssh/sshd_config
+    ############# Config SSH ###############
+    ########################################
+    ## Config the SSHD Service
+    Log DEBUG "Config sshd server..."
+    
+    SSHD_CONF=/etc/ssh/sshd_config;
+    sed -i '/UseDNS/s/.*/UseDNS no/' $SSHD_CONF
+    # Make ssh faster
+    sed -i "/^[[:space:]]*GSSAPIAuthentication/s/.*/GSSAPIAuthentication no/" $SSHD_CONF
+    sudo sed -i '/PermitRootLogin prohibit-password/s/.*/PermitRootLogin yes/' $SSHD_CONF
 
-    Run systemctl restart sshd.service
+    grep -q "ClientAliveInterval=" $SSHD_CONF || \
+      echo ClientAliveInterval=60 >> /etc/ssh/sshd_config
+      
+    # Use banner
+    cat <<EOF >/etc/banner
+ * * * * * * * * * * * W A R N I N G * * * * * * * * * * * * *
+THIS SYSTEM IS RESTRICTED TO AUTHORIZED USERS FOR AUTHORIZED USE
+ONLY. UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED AND MAY BE
+PUNISHABLE UNDER THE COMPUTER FRAUD AND ABUSE ACT OF 2013 OR
+OTHER APPLICABLE LAWS. IF NOT AUTHORIZED TO ACCESS THIS SYSTEM,
+DISCONNECT NOW. BY CONTINUING, YOU CONSENT TO YOUR KEYSTROKES
+AND DATA CONTENT BEING MONITORED. ALL PERSONS ARE HEREBY
+NOTIFIED THAT THE USE OF THIS SYSTEM CONSTITUTES CONSENT TO
+MONITORING AND AUDITING.
+EOF
+    if ! grep -q Krrish /etc/banner; then
+        echo -e "\t\033[1;32mServer Management by Krrish\033[0m" >>/etc/banner
+        echo >>/etc/banner
+    fi
 
-    Log DEBUG "success"
+    # sed -i '/Banner/s/.*/Banner \/etc\/banner/' /etc/ssh/sshd_config
+
+    Log SUCC "Config ssh server successful."
 }
 
 
@@ -1000,39 +1027,6 @@ EOF
 
 
 
-    ############# Config SSH ###############
-    ########################################
-    ## Config the SSHD Service
-    Log DEBUG "Config sshd server..."
-    
-    SSHD_CONF=/etc/ssh/sshd_config;
-    sed -i '/UseDNS/s/.*/UseDNS no/' $SSHD_CONF
-    # Make ssh faster
-    sed -i "/^[[:space:]]*GSSAPIAuthentication/s/.*/GSSAPIAuthentication no/" $SSHD_CONF
-    sudo sed -i '/PermitRootLogin prohibit-password/s/.*/PermitRootLogin yes/' $SSHD_CONF
-
-    grep -q "ClientAliveInterval=" $SSHD_CONF || \
-      echo ClientAliveInterval=60 >> /etc/ssh/sshd_config
-      
-    # Use banner
-    cat <<EOF >/etc/banner
- * * * * * * * * * * * W A R N I N G * * * * * * * * * * * * *
-THIS SYSTEM IS RESTRICTED TO AUTHORIZED USERS FOR AUTHORIZED USE
-ONLY. UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED AND MAY BE
-PUNISHABLE UNDER THE COMPUTER FRAUD AND ABUSE ACT OF 2013 OR
-OTHER APPLICABLE LAWS. IF NOT AUTHORIZED TO ACCESS THIS SYSTEM,
-DISCONNECT NOW. BY CONTINUING, YOU CONSENT TO YOUR KEYSTROKES
-AND DATA CONTENT BEING MONITORED. ALL PERSONS ARE HEREBY
-NOTIFIED THAT THE USE OF THIS SYSTEM CONSTITUTES CONSENT TO
-MONITORING AND AUDITING.
-EOF
-    if ! grep -q Krrish /etc/banner; then
-        echo -e "\t\033[1;32mServer Management by Krrish\033[0m" >>/etc/banner
-        echo >>/etc/banner
-    fi
-
-    # sed -i '/Banner/s/.*/Banner \/etc\/banner/' /etc/ssh/sshd_config
-    Log DEBUG "Config ok"
 
     ########### Config vim #################
     ########################################
@@ -1186,13 +1180,13 @@ EOF
 
 
 ######################################################################
-# 作用: 获取每个服务器SYSTEM信息
+# 作用: 获取服务器 System 信息
 # 用法: Get_SystemInfo
 # 注意：
 ######################################################################
 Get_SystemInfo() {
 
-    Log DEBUG "Get SYSTEM info..."
+    Log DEBUG "Getting system info..."
     DMIDECODE=`dmidecode -t system`
     SYSTEM_MANUFACTURER=`echo "$DMIDECODE" | grep 'Manufacturer' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_PRODUCTNAME=`echo "$DMIDECODE" | grep 'Product Name' | head -n 1 | cut -f 2 -d':' | xargs`
@@ -1203,13 +1197,14 @@ Get_SystemInfo() {
     Log DEBUG " --SYSTEM_PRODUCTNAME=\"$SYSTEM_PRODUCTNAME\""
     Log DEBUG " --SYSTEM_SERIALNUMBER=$SYSTEM_SERIALNUMBER"
     Log DEBUG " --SYSTEM_UUID=$SYSTEM_UUID"
-    Log DEBUG ""
+    
+    Log SUCC "Get system info successful..."
 }
 
 
 ######################################################################
-# 作用: 获取每个服务器OS信息
-# 用法: Get_SystemInfo
+# 作用: 获取服务器 OS 信息
+# 用法: Get_OSInfo
 # 注意：
 ######################################################################
 Get_OSInfo() {
@@ -1240,7 +1235,7 @@ Get_OSInfo() {
 
 
 ######################################################################
-# 作用: 获取每个服务器CPU信息
+# 作用: 获取服务器 CPU 信息
 # 用法: Get_CPUInfo
 # 注意：
 ######################################################################
@@ -1271,7 +1266,7 @@ Get_CPUInfo() {
 
 
 ######################################################################
-# 作用: 获取每个服务器MEMORY信息
+# 作用: 获取服务器 Memory 信息
 # 用法: Get_MEMInfo
 # 注意：
 ######################################################################
@@ -1304,7 +1299,7 @@ Get_MEMInfo() {
 
 
 ######################################################################
-# 作用: 获取每个服务器DISK信息
+# 作用: 获取服务器 Disk 信息
 # 用法: Get_DiskInfo
 # 注意：
 ######################################################################
@@ -1492,7 +1487,7 @@ Get_DiskInfo() {
 
 
 ######################################################################
-# 作用: 获取每个服务器NETWORK信息
+# 作用: 获取服务器 Network 信息
 # 用法: Get_NetInfo
 # 注意：
 ######################################################################
@@ -1669,9 +1664,9 @@ Get_NetInfo() {
 ######################################################################
 Gen_HostInfo() {
 
-    Log SUCC "finish check information and ready to push"
+    Log DEBUG "finish check information and ready to push"
 
-    cat <<EOF >${RUN_DIR}/${HOSTINFO_FILE}
+    cat <<EOF >/etc/${HOSTINFO_FILE}
 [system]
     SYSTEM_MANUFACTURER="$SYSTEM_MANUFACTURER"
     SYSTEM_PRODUCTNAME="$SYSTEM_PRODUCTNAME"
@@ -1701,7 +1696,6 @@ Gen_HostInfo() {
     MEMORY_NUMBER=$MEMORY_NUMBER
     MEMORY_SPEED="$MEMORY_SPEED"
 
-
 [disk]
     DISK_LIST="$DISK_LIST"
     DISK_PATH="$DISK_PATH"
@@ -1720,8 +1714,6 @@ Gen_HostInfo() {
     DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST"
     DISK_SATA="$DISK_SATA"
     DISK_SSD="$DISK_SSD"
-
-
 
 [network]
     NETWORK_PCIETHER_COUNT=$NETWORK_PCIETHER_COUNT
@@ -1759,26 +1751,6 @@ Push_HostInfo() {
 
 }
 
-
-
-
-
-######################################################################
-# 作用: 获取每个服务器 system/os/cpu/mem/disk/network 信息
-# 用法: Get_HostInfo
-# 注意：
-######################################################################
-Get_HostInfo() {
-
-    Get_SystemInfo
-    Get_OSInfo
-    Get_CPUInfo
-    Get_MEMInfo
-    Get_DiskInfo
-    Get_NetInfo
-    
-
-}
 
 ######################################################################
 # 作用: 判断 OS 发行版
@@ -1830,6 +1802,10 @@ Check_CentOS_Version() {
         return 2
     fi
 }
+
+
+
+
 
 
 
