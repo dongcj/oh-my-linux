@@ -384,8 +384,8 @@ Install_Basic_Soft() {
     if [ "$OS" = "Ubuntu" ]; then
     
         # prepare the apt
-        dpkg --configure -a
-        apt autoremove
+        dpkg --configure -a &>/dev/null
+        apt autoremove &>/dev/null
         
         which chkconfig || { rm -rf /usr/bin/chkconfig && \
         Run $PKG_INST_CMD sysv-rc-conf rcconf && \
