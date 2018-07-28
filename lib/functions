@@ -384,7 +384,7 @@ Run() {
     fi
     command=$*
     Log DEBUG "Run: $command"
-    $command | tee -a ${callerlog}
+    $command
     if [ $? -ne 0 ]; then
         Log ERROR "command run failed: $command"
     fi
