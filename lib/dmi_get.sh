@@ -22,29 +22,33 @@ fi
 Check_OS_Distrib(){
 
    RELEASE_FILE=/etc/*-release
-   if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" $RELEASE_FILE; then
+   if grep -Eqi "CentOS" /etc/issue &>/dev/null || \
+   grep -Eq "CentOS" $RELEASE_FILE &>/dev/null; then
        OS=CentOS
        PKG_INST_CMD="yum -y install"
        RELEASE_FILE=/etc/centos-release
        
-   elif grep -Eqi "Debian" /etc/issue || grep -Eq "Debian" $RELEASE_FILE; then
+   elif grep -Eqi "Debian" /etc/issue  &>/dev/null || \
+   grep -Eq "Debian" $RELEASE_FILE &>/dev/null; then
        OS=Debian
        PKG_INST_CMD="apt -y install"
        RELEASE_FILE=/etc/lsb-release
        
-   elif grep -Eqi "Ubuntu" /etc/issue || grep -Eq "Ubuntu" $RELEASE_FILE; then
+   elif grep -Eqi "Ubuntu" /etc/issue  &>/dev/null || \
+   grep -Eq "Ubuntu" $RELEASE_FILE &>/dev/null; then
        OS=Ubuntu
        PKG_INST_CMD="apt -y install"
        RELEASE_FILE=/etc/lsb-release
        
-   elif grep -Eqi "Alpine" /etc/issue || grep -Eq "Alpine" $RELEASE_FILE; then
+   elif grep -Eqi "Alpine" /etc/issue  &>/dev/null || \
+   grep -Eq "Alpine" $RELEASE_FILE &>/dev/null; then
        OS=Alpine
        PKG_INST_CMD="apk -y -q install"
-        RELEASE_FILE=/etc/lsb-release
+       RELEASE_FILE=/etc/lsb-release
         
    else
        echo "Not support OS, Please reinstall OS and retry!"
-       return 1
+       exit 1
    fi
 }
 
