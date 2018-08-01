@@ -118,7 +118,7 @@ Get_SystemInfo() {
     SYSTEM_SERIALNUMBER=`echo "$DMIDECODE" | grep 'Serial Number' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_RACKHEIGHT=`dmidecode | grep 'Height: ' | awk '{print $2}'`
     SYSTEM_BASEBOARD=`dmidecode -t baseboard | grep 'Manufacturer: ' | awk '{print $2}'`
-    SYSTEM_BASEBOARDNAME=`dmidecode -t baseboard | grep 'Product Name: ' | awk -F':' '{print $NF}'`
+    SYSTEM_BASEBOARDNAME=`dmidecode -t baseboard | grep 'Product Name: ' | awk -F':' '{print $NF}' | xargs`
     SYSTEM_UUID=`echo "$DMIDECODE" | grep 'UUID' | head -n 1 | cut -f 2 -d':' | xargs`
     
     
@@ -215,10 +215,10 @@ Get_MEMInfo() {
     MEMORY_FREE=`printf "%G" $(echo "scale = 1; $_MEMORY_FREE/1024/1002" | bc)`
     
     MEMORY_INFO=`dmidecode --type 17`
-    MEMORY_SLOT=`echo "$MEMORY_INFO" | grep " Speed: " | wc -l`
+    MEMORY_SLOT=`echo "$MEMORY_INFO" | grep "Memory Device" | wc -l`
     
     MEMORY_TYPE=`echo "$MEMORY_INFO" | grep "Type: " | awk '{print $2}' | sort | uniq`
-    MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep "Configured Clock Speed" | wc -l`
+    MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep "Size" | grep -v "No Module Installed" | wc -l`
     
     # memory speed 
     MEMORY_SPEED=`echo "$MEMORY_INFO" | grep " *Speed: " | grep -v Clock | \
@@ -244,7 +244,7 @@ Get_MEMInfo() {
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
     Log DEBUG " --MEMORY_SPEEDCONFIGURED=$MEMORY_SPEEDCONFIGURED"
     Log DEBUG " --MEMORY_MANUFACTURER=\"$MEMORY_MANUFACTURER\""
-    Log DEBUG " --MEMORY_SERIALNUMBER=$MEMORY_SERIALNUMBER"
+    Log DEBUG " --MEMORY_SERIALNUMBER=\"$MEMORY_SERIALNUMBER\""
     
     Log SUCC "Get Memory info successful."
 
