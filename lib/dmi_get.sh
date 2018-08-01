@@ -272,7 +272,7 @@ Get_DiskInfo() {
 
     # disk list & count
     DISK_LIST=`echo "$blkinfo" | grep disk | awk '{print $1}' | xargs`
-    DISK_PATH=`echo "$DISK_LIST" | sed 's/^/\/dev\//' | xargs`
+    DISK_PATH=`echo "$DISK_LIST" | xargs -n1  | sed 's/^/\/dev\//' | xargs`
     
     DISK_COUNT=`echo ${DISK_LIST} | wc -w | xargs`
 
@@ -366,11 +366,13 @@ Get_DiskInfo() {
             disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
             if echo $disk_rotation_rate | grep -q "Solid State Device"; then
                 disk_rotation_rate="SSD"
+            else
+                disk_rotation_rate=`echo $disk_rotation_rate`
             fi
             [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
             # get disk rotation rate
-            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:${disk_rotation_rate}"
+            DISK_ROTATION_RATE_LIST="${DISK_ROTATION_RATE_LIST} ${disk_path}:'${disk_rotation_rate}'"
 
         fi
             
