@@ -57,6 +57,11 @@ Install_Basic_Soft() {
 
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
+    if  bc -v &>/dev/null && lsscsi &>/dev/null; then
+        Log DEBUG "${COLOR_YELLOW}Already installed, continue...${COLOR_CLOSE}"
+        return
+    fi
+    
     softlist="bash-completion bc bmon ethtool fio  hdparm  htop \
     ipmitool iotop ifstat locales  lsscsi  mycli net-tools \
     nmon ntp  pciutils python-pip  rsync smartmontools wget"
