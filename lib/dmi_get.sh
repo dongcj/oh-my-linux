@@ -403,7 +403,7 @@ Get_DiskInfo() {
                 [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
                 # get disk rotation rate
-                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:${disk_rotation_rate}"
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:\'${disk_rotation_rate}\'"
 
             # if it is LSI raid, use "MegaCli64 -pdlist ¨CaALL"
             elif [ "$raidcard_brand" = "LSI" ]; then
@@ -429,7 +429,7 @@ Get_DiskInfo() {
                 if echo $disk_rotation_rate | grep -q "Solid State Device"; then
                     disk_rotation_rate="SSD"
                 fi
-                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:${disk_rotation_rate}"
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:\'${disk_rotation_rate}\'"
 
             # other not been tested
             else
