@@ -399,6 +399,8 @@ Get_DiskInfo() {
                 disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
                 if echo $disk_rotation_rate | grep -q "Solid State Device"; then
                     disk_rotation_rate="SSD"
+                else
+                    disk_rotation_rate=`echo $disk_rotation_rate`
                 fi
                 [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
@@ -428,6 +430,8 @@ Get_DiskInfo() {
                 disk_rotation_rate=`echo $disk_rotation_rate`
                 if echo $disk_rotation_rate | grep -q "Solid State Device"; then
                     disk_rotation_rate="SSD"
+                else
+                    disk_rotation_rate=`echo $disk_rotation_rate`
                 fi
                 DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
