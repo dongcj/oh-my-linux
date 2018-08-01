@@ -230,15 +230,11 @@ Get_MEMInfo() {
     sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
     MEMORY_SPEEDCONFIGURED=${MEMORY_SPEEDCONFIGURED:-"Unknown"}
     
-    MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | \
-    sed -n 's/.*Manufacturer: \(.*\)/\1/p' | sort | uniq | xargs`
+    MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | sed -n 's/.*Manufacturer: \(.*\)/\1/p' | \
+    egrep -v "Manufacturer|BAD INDEX" | sort | uniq | xargs`
     
-    if echo $MEMORY_MANUFACTURER | grep -q "BAD INDEX"; then
-        MEMORY_MANUFACTURER="Unknown"
-    fi
-    
-    MEMORY_SERIALNUMBER=`echo "$MEMORY_INFO" | \
-    sed -n 's/.*Serial Number: \(.*\)/\1/p' | sort | uniq | xargs`
+    MEMORY_SERIALNUMBER=`echo "$MEMORY_INFO" | sed -n 's/.*Serial Number: \(.*\)/\1/p' | \
+    egrep -v "SerNum|BAD INDEX" | sort | uniq | xargs`
     
     Log DEBUG " --MEMORY_TOTAL=${MEMORY_TOTAL} GB"
     Log DEBUG " --MEMORY_FREE=${MEMORY_FREE} GB"
@@ -492,9 +488,6 @@ Get_NetInfo() {
 
     Log DEBUG "${COLOR_YELLOW}Getting Network info...${COLOR_CLOSE}"
 
-    NET_DEV_PREFIX="br bond eth en em"
-
-
     NETWORK_PCI_INFO=`lspci | grep "Ethernet controller"`
     NETWORK_PCIETHER_COUNT=`echo "$NETWORK_PCI_INFO" | wc -l`
     
@@ -523,7 +516,7 @@ Get_NetInfo() {
     # get the physical ether
     unset NETWORK_PHYETHERS
     for i in $NETWORK_ALLETHERS; do
-        if ethtool $i | grep "Supported ports" | egrep -q "FIBRE|TP" &>/dev/null; then
+        if ethtool $i 2>/dev/null | grep "Supported ports" | egrep -q "FIBRE|TP"; then
             NETWORK_PHYETHERS="$NETWORK_PHYETHERS $i"
         fi
     done
