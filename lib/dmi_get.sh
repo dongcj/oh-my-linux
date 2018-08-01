@@ -609,13 +609,9 @@ Get_NetInfo() {
 
     fi
 
-    if [ "$OS" = "CentOS" ]; then
-        IP_ADDRESS_NETMASK=`ifconfig $NET_USE_ETHER | grep "inet " | \
-        sed "s/inet addr:\(.*\) .*  Mask:\(.*\)/\1 \2/" | head -1 | xargs`
-     else
-        IP_ADDRESS_NETMASK=`ifconfig $NET_USE_ETHER | grep "inet " | \
-        sed "s/inet \(.*\) netmask \(.*\) broadcast .*/\1 \2/" | head -1 | xargs`
-     fi
+     NETWORK_IPADDR=`ip a show $NET_USE_ETHER | grep "inet " | \
+     awk '{print $2}' | head -1 | xargs`
+
     # Other ip get method
     # ip addr show eth0|awk '/inet /{split($2,x,"/");print x[1]}'
     # ifconfig eth0| awk '{if ( $1 == "inet" && $3 ~ /^Bcast/) print $2}' | awk -F: '{print $2}'
@@ -625,8 +621,6 @@ Get_NetInfo() {
 
     # Another way to get ip address is:
     #IP_ADDRESS=`ip addr show eth0 | awk '/inet /{split($2,x,"/");print x[1]}'`
-    NETWORK_IPADDR=`echo ${IP_ADDRESS_NETMASK} | awk '{print $1}'`
-    NETWORK_IPMASK=`echo ${IP_ADDRESS_NETMASK} | awk '{print $2}'`
     
     if [ -f /etc/network/interfaces ]; then
         NETWORK_GATEWAY=`grep -i "^ *gateway" /etc/network/interfaces | awk '{print $2}' | sed -n '1p'`
@@ -660,7 +654,6 @@ Get_NetInfo() {
     Log DEBUG " --NET_USE_ETHER=$NET_USE_ETHER"
     Log DEBUG " --NET_USE_ETHER_TYPE=$NET_USE_ETHER_TYPE"
     Log DEBUG " --NETWORK_IPADDR=$NETWORK_IPADDR"
-    Log DEBUG " --NETWORK_IPMASK=$NETWORK_IPMASK"
     Log DEBUG " --NETWORK_GATEWAY=$NETWORK_GATEWAY"
     Log DEBUG " --NETWORK_DNS=$NETWORK_DNS"
     Log DEBUG " --NETWORK_DOMAIN=$NETWORK_DOMAIN"
