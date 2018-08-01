@@ -604,10 +604,10 @@ Get_NetInfo() {
 
     if [ "$OS" = "CentOS" ]; then
         IP_ADDRESS_NETMASK=`ifconfig $NET_USE_ETHER | grep "inet " | \
-        sed "s/inet \(.*\) netmask \(.*\) broadcast .*/\1 \2/" | head -1 | xargs`
+        sed "s/inet addr:\(.*\) .*  Mask:\(.*\)/\1 \2/" | head -1 | xargs`
      else
         IP_ADDRESS_NETMASK=`ifconfig $NET_USE_ETHER | grep "inet " | \
-        sed "s/inet addr:\(.*\) .*  Mask:\(.*\)/\1 \2/" | head -1 | xargs`
+        sed "s/inet \(.*\) netmask \(.*\) broadcast .*/\1 \2/" | head -1 | xargs`
      fi
     # Other ip get method
     # ip addr show eth0|awk '/inet /{split($2,x,"/");print x[1]}'
