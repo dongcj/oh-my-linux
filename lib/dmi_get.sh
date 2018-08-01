@@ -511,7 +511,7 @@ Get_NetInfo() {
         sed "s/.*Ethernet controller: \(.*\) 10-Gigabit .*/\1/" | sort | uniq`
     fi
     
-    NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo \
+    NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo | \
     grep -v veth | tr -d ':' | xargs`
 
     # get the physical ether
