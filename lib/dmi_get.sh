@@ -1,8 +1,97 @@
 #!/usr/bin/env bash
 #
 # Author: dongcj <ntwk@163.com>
-# description: 
+# description: get system and OS information
 #
+
+if ! Log &>/dev/null; then  
+    Log() { echo "[ $1 ] : $2"; }
+    FBS_ESC=`echo -en "\033"`
+    COLOR_RED="${FBS_ESC}[1;31m"      
+    COLOR_GREEN="${FBS_ESC}[1;32m";    
+    COLOR_YELLOW="${FBS_ESC}[1;33m"    
+    COLOR_CLOSE="${FBS_ESC}[0m" 
+fi
+
+######################################################################
+# 作用: 判断 OS 发行版
+# 用法: Check_OS_Distrib 
+# 注意：
+######################################################################
+Check_OS_Distrib(){
+
+   RELEASE_FILE=/etc/*-release
+   if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" $RELEASE_FILE; then
+       OS=CentOS
+       PKG_INST_CMD="yum -y install"
+       RELEASE_FILE=/etc/centos-release
+       
+   elif grep -Eqi "Debian" /etc/issue || grep -Eq "Debian" $RELEASE_FILE; then
+       OS=Debian
+       PKG_INST_CMD="apt -y install"
+       RELEASE_FILE=/etc/lsb-release
+       
+   elif grep -Eqi "Ubuntu" /etc/issue || grep -Eq "Ubuntu" $RELEASE_FILE; then
+       OS=Ubuntu
+       PKG_INST_CMD="apt -y install"
+       RELEASE_FILE=/etc/lsb-release
+       
+   elif grep -Eqi "Alpine" /etc/issue || grep -Eq "Alpine" $RELEASE_FILE; then
+       OS=Alpine
+       PKG_INST_CMD="apk -y -q install"
+        RELEASE_FILE=/etc/lsb-release
+        
+   else
+       echo "Not support OS, Please reinstall OS and retry!"
+       return 1
+   fi
+}
+
+######################################################################
+# 作用: 为服务器安装所需要的基础软件
+# 用法: Install_Basic_Soft
+# 注意：依赖 Check_OS_DISTRIB
+######################################################################
+Install_Basic_Soft() {
+
+    Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
+    
+    softlist="bash-completion bc bmon ethtool fio  hdparm  htop \
+    ipmitool iotop ifstat locales  lsscsi  mycli net-tools \
+    nmon ntp  pciutils python-pip  rsync smartmontools wget"
+    softlist=`echo $softlist`
+
+    # add chkconfig for ubuntu
+    if [ "$OS" = "Ubuntu" ]; then
+    
+        # prepare the apt
+        Run dpkg --configure -a
+        Run apt -y autoremove
+        
+        which chkconfig || { rm -rf /usr/bin/chkconfig && \
+        Run $PKG_INST_CMD sysv-rc-conf rcconf && \
+        Run ln -s /usr/sbin/sysv-rc-conf /usr/bin/chkconfig; }
+        
+    elif [ "$OS" = "CentOS" ]; then
+        if ! rpm -qa | grep -iq epel; then
+            yum install -y epel-release
+         fi
+    fi
+    
+    Run $PKG_INST_CMD $softlist
+    
+    # if the has pci raid
+    pci_info=`lspci`
+    if echo "$pci_info" | grep -i raid | grep -iq mega; then
+        Run yum -y -q install MegaCli
+
+    elif echo "$pci_info" | grep -i raid | grep -iq hewlett; then
+        Run yum -y -q install hpacucli
+    fi
+    
+    Log SUCC "Install basic software successful."
+}
+
 
 ######################################################################
 # 作用: 获取服务器 System 信息
@@ -40,13 +129,14 @@ Get_OSInfo() {
     OS_DISTRIBUTION=${OS}
     OS_FAMILY=`uname`
     [ "$OS_FAMILY" != "Linux" ] && { Log ERROR "Not Linux? exit"; return 1; }
-    OS_VERSION=`cat $RELEASE_FILE | grep ${OS} | sed -n '$p'  | awk '{print $((NF-1))}'`
+    OS_VERSION=`grep ${OS_DISTRIBUTION} $RELEASE_FILE | sed -n '$p' | \
+      awk -F'[ "=]' '{ i=1; while(i<NF) { if ( $i~/[0-9]\.[0-9]/ ) print $i; i++ }}'`
     OS_ARCH=`arch`;OS_BIT=`getconf LONG_BIT`
     OS_HOSTID=`hostid`
-    OS_HOSTNAME=${MY_HOSTNAME}
+    OS_HOSTNAME=${MY_HOSTNAME:-$HOSTNAME}
 
-    Log DEBUG " --OS_DISTRIBUTION=\"$OS_DISTRIBUTION\""
     Log DEBUG " --OS_FAMILY=$OS_FAMILY"
+    Log DEBUG " --OS_DISTRIBUTION=\"$OS_DISTRIBUTION\""
     Log DEBUG " --OS_VERSION=$OS_VERSION"
     Log DEBUG " --OS_ARCH=$OS_ARCH"
     Log DEBUG " --OS_HOSTID=$OS_HOSTID"
@@ -270,7 +360,7 @@ Get_DiskInfo() {
             raidcard_brand=`echo $line | awk '{print $3}'`
             
             # if is ATA
-            if [ "$raidcard_brand" = "ATA"]; then
+            if [ "$raidcard_brand" = "ATA" ]; then
 
                 Log DEBUG " --$disk_path is JBOD mode"
 
@@ -536,7 +626,17 @@ Get_NetInfo() {
 
     Log SUCC "Get Network info successful."
 
-
-
-
 }
+
+
+if [ "$SHLVL" -le 2 ]; then
+
+    # assum use directly from command, not inital by other scripts
+    Check_OS_Distrib
+    Get_SystemInfo
+    Get_OSInfo
+    Get_CPUInfo
+    Get_MEMInfo
+    Get_DiskInfo
+    Get_NetInfo
+fi

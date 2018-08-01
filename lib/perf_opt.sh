@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Author: dongcj <ntwk@163.com>
-# description: 
+# Author: krrish <krrishdo@gmail.com>
+# description: Linux Service config
 #
 
 ######################################################################
@@ -11,7 +11,7 @@
 ######################################################################
 Config_Lang() {
 
-    Log DEBUG "${COLOR_YELLOW}Config language...${COLOR_CLOSE}"
+    Log DEBUG "Config language..."
     
     echo "LC_ALL=en_US.UTF-8" >> /etc/environment
     echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
@@ -24,7 +24,7 @@ Config_Lang() {
     fi
     source $PROFILE_CONF
     
-    Log SUCC "Config language successful."
+    Log DEBUG "Config language successful."
 }
 
 ######################################################################
@@ -34,7 +34,7 @@ Config_Lang() {
 ######################################################################
 Config_Selinux() {
 
-    Log DEBUG "${COLOR_YELLOW}Config language...${COLOR_CLOSE}"
+    Log DEBUG "Config selinux..."
     
     SELINUX_CONF=/etc/selinux/config
     CURRENT_SELINUX_VALUE=`awk -F"=" '/^SELINUX=/ {print $2}' $SELINUX_CONF`
@@ -45,7 +45,7 @@ Config_Selinux() {
     fi
     setenforce 0 >&/dev/null
     
-    Log SUCC "Config language successful."
+    Log DEBUG "Config selinux successful."
 }
 
 
@@ -56,12 +56,54 @@ Config_Selinux() {
 ######################################################################
 Config_Security() {
 
-    Log DEBUG "${COLOR_YELLOW}Config language...${COLOR_CLOSE}"
+    Log DEBUG "Config security..."
     
     sed -i s'/Defaults.*requiretty/#Defaults requiretty'/g /etc/sudoers
     
-    Log SUCC "Config language successful."
+    Log DEBUG "Config security successful."
 }
+
+######################################################################
+# 作用: 加快 SSH 访问速度及SSH其它一些相关配置
+# 用法: Config_SSH_Server
+# 注意：
+######################################################################
+Config_SSH_Server() {
+
+    Log DEBUG "Config sshd server..."
+    
+    SSHD_CONF=/etc/ssh/sshd_config;
+    sed -i '/UseDNS/s/.*/UseDNS no/' $SSHD_CONF
+    # Make ssh faster
+    sed -i "/^[[:space:]]*GSSAPIAuthentication/s/.*/GSSAPIAuthentication no/" $SSHD_CONF
+    sudo sed -i '/PermitRootLogin prohibit-password/s/.*/PermitRootLogin yes/' $SSHD_CONF
+
+    grep -q "ClientAliveInterval=" $SSHD_CONF || \
+      echo ClientAliveInterval=60 >> /etc/ssh/sshd_config
+      
+    # Use banner
+    cat <<EOF >/etc/banner
+ * * * * * * * * * * * W A R N I N G * * * * * * * * * * * * *
+THIS SYSTEM IS RESTRICTED TO AUTHORIZED USERS FOR AUTHORIZED USE
+ONLY. UNAUTHORIZED ACCESS IS STRICTLY PROHIBITED AND MAY BE
+PUNISHABLE UNDER THE COMPUTER FRAUD AND ABUSE ACT OF 2013 OR
+OTHER APPLICABLE LAWS. IF NOT AUTHORIZED TO ACCESS THIS SYSTEM,
+DISCONNECT NOW. BY CONTINUING, YOU CONSENT TO YOUR KEYSTROKES
+AND DATA CONTENT BEING MONITORED. ALL PERSONS ARE HEREBY
+NOTIFIED THAT THE USE OF THIS SYSTEM CONSTITUTES CONSENT TO
+MONITORING AND AUDITING.
+EOF
+    if ! grep -q Krrish /etc/banner; then
+        echo -e "\t\033[1;32mServer Management by Krrish\033[0m" >>/etc/banner
+        echo >>/etc/banner
+    fi
+
+    # sed -i '/Banner/s/.*/Banner \/etc\/banner/' /etc/ssh/sshd_config
+
+    Log DEBUG "Config ssh server successful."
+}
+
+
 
 ######################################################################
 # 作用: 配置 Services
@@ -70,7 +112,7 @@ Config_Security() {
 ######################################################################
 Config_Services() {
 
-    Log DEBUG "${COLOR_YELLOW}Config language...${COLOR_CLOSE}"
+    Log DEBUG "Config services..."
     
     TO_DISABLE_SERVICE="abrtd acpid atd auditd avahi-daemon autofs bluetooth cpuspeed \
                         cups firstboot hidd ip6tables isdn mcstrans messagebus \
@@ -99,7 +141,7 @@ Config_Services() {
         chmod 644 /usr/lib/systemd/system/wpa_supplicant.service
     fi
 
-    Log SUCC "Config language successful."
+    Log DEBUG "Config services successful."
 }
 
 ######################################################################
@@ -109,7 +151,7 @@ Config_Services() {
 ######################################################################
 Config_Limits() {
 
-    Log DEBUG "${COLOR_YELLOW}Config language...${COLOR_CLOSE}"
+    Log DEBUG "Config limits..."
     
     ulimit -n 655350
     ulimit -u 409600
@@ -135,17 +177,17 @@ Config_Limits() {
         echo -e "*\thard\tnofile\t655350" >> /etc/security/limits.d/90-nproc.conf
     fi
     
-    Log SUCC "Config language successful."
+    Log DEBUG "Config limits successful."
 }
 
 ######################################################################
-# 作用: 配置 Limits
-# 用法: Config_Limits
+# 作用: 配置 IPv6
+# 用法: Config_IPv6
 # 注意：
 ######################################################################
 Config_IPv6() {
 
-    Log DEBUG "${COLOR_YELLOW}Config IPv6...${COLOR_CLOSE}"
+    Log DEBUG "Config IPv6..."
     
     SYSCTL_CONF=/etc/sysctl.conf
     SYSCONFIG_NETWORK=/etc/sysconfig/network
@@ -169,18 +211,18 @@ Config_IPv6() {
         fi
     fi
     
-    Log SUCC "Config ipv6 successful."
+    Log DEBUG "Config ipv6 successful."
 }
 
 
 ######################################################################
-# 作用: 优化网络参数
-# 用法: Config_Network
+# 作用: 优化内核网络参数
+# 用法: Config_Kernel_Network
 # 注意：
 ######################################################################
-Config Network() {
+Config_Kernel_Network() {
 
-    Log DEBUG "${COLOR_YELLOW}Config Network...${COLOR_CLOSE}"
+    Log DEBUG "Config kernel network parameter..."
     
     if ! grep -q "Optimized Networking Globally" ${SYSCTL_CONF}; then
         echo " " >>${SYSCTL_CONF}
@@ -228,7 +270,7 @@ EOF
         sysctl -p >&/dev/null
     fi
     
-    Log SUCC "Config network successful."
+    Log DEBUG "Config kernel network parameter successful."
 }
 
 ######################################################################
@@ -238,7 +280,7 @@ EOF
 ######################################################################
 Config_Kernel() {
 
-    Log DEBUG "${COLOR_YELLOW}Config kernel...${COLOR_CLOSE}"
+    Log DEBUG "Config kernel..."
     
     if ! grep -q "Optimized Kernel Globally" ${SYSCTL_CONF}; then
         echo " " >>${SYSCTL_CONF}
@@ -254,17 +296,17 @@ EOF
         sysctl -p >&/dev/null
     fi
     
-    Log SUCC "Config kernel successful."
+    Log DEBUG "Config kernel successful."
 }
     
 ######################################################################
 # 作用: 配置时区
-# 用法: Config_TimeZone
+# 用法: Config_Timezone
 # 注意：
 ######################################################################
-Config_TimeZone() {
+Config_Timezone() {
 
-    Log DEBUG "${COLOR_YELLOW}Config timezone...${COLOR_CLOSE}"
+    Log DEBUG "Config timezone..."
     
     localtime_file=/etc/localtime
     clock_file=/etc/sysconfig/clock
@@ -282,8 +324,33 @@ Config_TimeZone() {
         hwclock --systohc
     fi
     
-    Log SUCC "Config timezone successful."
+    Log DEBUG "Config timezone successful."
 }
+
+######################################################################
+# 作用: 配置本机为 NTP Server
+# 用法: Config_NTP_Server
+# 注意：
+######################################################################
+Config_NTP_Server() {
+
+    Log DEBUG "Config ntp server..."
+    
+    ntp_conf_file=/etc/ntp.conf
+    if [ -f $ntp_conf_file ]; then
+        if ! grep -q "server * 127.127.1.0" $ntp_conf_file; then
+            last_server_no=`sed '/./=' $ntp_conf_file | sed '/./N; s/\n/ /' | grep "^[0-9]* server" | sed -n '$p' | awk '{print $1}'`
+            sed -i "${last_server_no}a server 127.127.1.0\nfudge 127.127.1.0 stratum 10" $ntp_conf_file
+        fi
+    fi
+
+    # auto start ntp server
+    Run systemctl enable  ntpd.service
+    Run systemctl restart ntpd.service
+
+    Log DEBUG "Config ntp server successful."
+}
+
 
 ######################################################################
 # 作用: 配置 NTP 客户端
@@ -292,7 +359,7 @@ Config_TimeZone() {
 ######################################################################
 Config_NTP_Client(){
   
-    Log DEBUG "${COLOR_YELLOW}Config ntp client...${COLOR_CLOSE}"
+    Log DEBUG "Config ntp client..."
 
     # 
     if ! grep -q "interface ignore wildcard" /etc/ntp.conf; then
@@ -304,7 +371,7 @@ Config_NTP_Client(){
     Run ntpdate $CEPH_AI_VM_HOSTNAME
     Run systemctl start ntpd.service
     
-    Log SUCC "Config ntp client successful."
+    Log DEBUG "Config ntp client successful."
 }
 
 ######################################################################
@@ -314,7 +381,7 @@ Config_NTP_Client(){
 ######################################################################
 Config_Vim() {
 
-    Log DEBUG "${COLOR_YELLOW}Config vim...${COLOR_CLOSE}"
+    Log DEBUG "Config vim..."
 
     # vim setting
     if ! grep -q "set paste" /etc/vimrc &>/dev/null; then
@@ -333,7 +400,7 @@ Config_Vim() {
         echo "export EDITOR=vim" >>$PROFILE_CONF
     fi
     
-    Log SUCC "Config ntp client successful."
+    Log DEBUG "Config vim successful."
 }    
     
 ######################################################################
@@ -343,7 +410,7 @@ Config_Vim() {
 ######################################################################
 Config_Alias() {
 
-    Log DEBUG "${COLOR_YELLOW}Config alias...${COLOR_CLOSE}"
+    Log DEBUG "Config alias..."
     
     cat <<EOF >~/.bash_aliases
     alias ls='ls --color=always'
@@ -363,7 +430,7 @@ EOF
     if ! grep -q "source ~/.bash_aliases" $PROFILE_CONF; then
         echo "source ~/.bash_aliases" >>$PROFILE_CONF
     fi
-    Log SUCC "Config alias successful."
+    Log DEBUG "Config alias successful."
 }
 
 
@@ -374,7 +441,7 @@ EOF
 ######################################################################
 Config_History() {
 
-    Log DEBUG "${COLOR_YELLOW}Config history...${COLOR_CLOSE}"
+    Log DEBUG "Config history..."
     
     # 1st Method: install bashhub-client, centralize store & search
     # curl -OL https://bashhub.com/setup && bash setup
@@ -440,7 +507,7 @@ ${HISTDIR}/* {
 }
 EOF
 
-    Log SUCC "Config history successful."
+    Log DEBUG "Config history successful."
 }    
 
 ######################################################################
@@ -450,7 +517,7 @@ EOF
 ######################################################################
 Config_Mail() {
     
-    Log DEBUG "${COLOR_YELLOW}Config mail...${COLOR_CLOSE}"
+    Log DEBUG "Config mail..."
     
     # resolve postfix error
     postfix_conf=/etc/postfix/main.cf
@@ -466,7 +533,7 @@ Config_Mail() {
     fi
     source $PROFILE_CONF
 
-    Log SUCC "Config mail successful."
+    Log DEBUG "Config mail successful."
 }
 
 ######################################################################
@@ -476,24 +543,24 @@ Config_Mail() {
 ######################################################################
 Config_Lib() {
 
-    Log DEBUG "${COLOR_YELLOW}Config library...${COLOR_CLOSE}"
+    Log DEBUG "Config library..."
     
     # Append lib
     if ! grep -q "/usr/local/lib" /etc/ld.so.conf; then
         echo "/usr/local/lib/" >> /etc/ld.so.conf
     fi
     
-    Log SUCC "Config library successful."
+    Log DEBUG "Config library successful."
 }
 
 Config_Snippets() {
 
-    Log DEBUG "${COLOR_YELLOW}Config snippets...${COLOR_CLOSE}"
+    Log DEBUG "Config snippets..."
     
     ########### Config snippets ############
     # 将错误按键的beep声关掉。stop the“beep"
     cp -rLfap /etc/inputrc /etc/inputrc.origin
     sed -i '/#set bell-style none/s/#set bell-style none/set bell-style none/' /etc/inputrc
 
-    Log SUCC "Config snippets successful."
+    Log DEBUG "Config snippets successful."
 }
