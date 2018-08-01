@@ -357,12 +357,12 @@ Get_DiskInfo() {
             # get the disk Rotation Rate
             disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
             if echo $disk_rotation_rate | grep -q "Solid State Device"; then
-                disk_rotation_rate=SSD
+                disk_rotation_rate="SSD"
             fi
             [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
             # get disk rotation rate
-            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}: ${disk_rotation_rate}"
+            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:${disk_rotation_rate}"
 
         fi
             
@@ -383,12 +383,12 @@ Get_DiskInfo() {
                 # get the disk Rotation Rate
                 disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
                 if echo $disk_rotation_rate | grep -q "Solid State Device"; then
-                    disk_rotation_rate=SSD
+                    disk_rotation_rate="SSD"
                 fi
                 [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
                 # get disk rotation rate
-                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:${disk_rotation_rate}"
 
             # if it is LSI raid, use "MegaCli64 -pdlist ¨CaALL"
             elif [ "$raidcard_brand" = "LSI" ]; then
@@ -412,9 +412,9 @@ Get_DiskInfo() {
                 disk_rotation_rate=`echo "$this_slot_info" | grep "Media Type" | awk -F':' '{print $2}' | sed -n '1p'`
                 disk_rotation_rate=`echo $disk_rotation_rate`
                 if echo $disk_rotation_rate | grep -q "Solid State Device"; then
-                    disk_rotation_rate=SSD
+                    disk_rotation_rate="SSD"
                 fi
-                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:${disk_rotation_rate}"
 
             # other not been tested
             else
