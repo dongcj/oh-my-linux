@@ -116,11 +116,18 @@ Get_SystemInfo() {
     SYSTEM_MANUFACTURER=`echo "$DMIDECODE" | grep 'Manufacturer' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_PRODUCTNAME=`echo "$DMIDECODE" | grep 'Product Name' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_SERIALNUMBER=`echo "$DMIDECODE" | grep 'Serial Number' | head -n 1 | cut -f 2 -d':' | xargs`
+    SYSTEM_RACKHEIGHT=`dmidecode | grep 'Height: ' | awk '{print $2}'`
+    SYSTEM_BASEBOARD=`dmidecode -t baseboard | grep 'Manufacturer: ' | awk '{print $2}'`
+    SYSTEM_BASEBOARDNAME=`dmidecode -t baseboard | grep 'Product Name: ' | awk -F':' '{print $NF}'`
     SYSTEM_UUID=`echo "$DMIDECODE" | grep 'UUID' | head -n 1 | cut -f 2 -d':' | xargs`
-
+    
+    
     Log DEBUG " --SYSTEM_MANUFACTURER=\"$SYSTEM_MANUFACTURER\""
     Log DEBUG " --SYSTEM_PRODUCTNAME=\"$SYSTEM_PRODUCTNAME\""
+    Log DEBUG " --SYSTEM_RACKHEIGHT=$SYSTEM_RACKHEIGHT"
     Log DEBUG " --SYSTEM_SERIALNUMBER=$SYSTEM_SERIALNUMBER"
+    Log DEBUG " --SYSTEM_BASEBOARD=$SYSTEM_BASEBOARD"
+    Log DEBUG " --SYSTEM_BASEBOARDNAME=$SYSTEM_BASEBOARDNAME"
     Log DEBUG " --SYSTEM_UUID=$SYSTEM_UUID"
     
     Log SUCC "Get system info successful."
