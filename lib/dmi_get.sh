@@ -168,7 +168,7 @@ Get_CPUInfo() {
     # if cpu has HT, one core has more than 2 (inclue 2) threads;
     CPU_IFHT=`if [ $(grep "core id" /proc/cpuinfo | grep -w 0 | wc -l) -ge 2 ]; then echo 1; else echo 0;fi`
     CPU_CORE=`if [ "$CPU_IFHT" -eq 1 ];then printf "%d" $((CPU_THREAD/2));else echo $CPU_THREAD;fi`
-    CPU_SPEED=`grep 'cpu MHz' /proc/cpuinfo | sort | sed -n '$p' | awk '{printf "%d", $NF}'`
+    CPU_SPEEDCURRENT=`grep 'cpu MHz' /proc/cpuinfo | sort | sed -n '$p' | awk '{printf "%d", $NF}'`
     CPU_FAMILY=`if grep AuthenticAMD /proc/cpuinfo >/dev/null; then echo AMD; elif grep \
                 Intel /proc/cpuinfo >/dev/null; then echo Intel; else echo Unknown; fi`
     CPU_MODELNAME=`grep "model name" /proc/cpuinfo | uniq | awk -F":" '{print $2}' | sed 's/           / /' | xargs`
@@ -177,7 +177,7 @@ Get_CPUInfo() {
     Log DEBUG " --CPU_PHYSICAL=$CPU_PHYSICAL"
     Log DEBUG " --CPU_IFHT=$CPU_IFHT"
     Log DEBUG " --CPU_CORE=$CPU_CORE"
-    Log DEBUG " --CPU_SPEED=$CPU_SPEED"
+    Log DEBUG " --CPU_SPEEDCURRENT=$CPU_SPEEDCURRENT"
     Log DEBUG " --CPU_FAMILY=$CPU_FAMILY"
     Log DEBUG " --CPU_MODELNAME=\"$CPU_MODELNAME\""
     
@@ -221,6 +221,10 @@ Get_MEMInfo() {
     
     MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | \
     sed -n 's/.*Manufacturer: \(.*\)/\1/p' | sort | uniq | xargs`
+    
+    if echo $MEMORY_MANUFACTURER | grep -q "BAD INDEX"; then
+        MEMORY_MANUFACTURER="Unknown"
+    fi
     
     MEMORY_SERIALNUMBER=`echo "$MEMORY_INFO" | \
     sed -n 's/.*Serial Number: \(.*\)/\1/p' | sort | uniq | xargs`
