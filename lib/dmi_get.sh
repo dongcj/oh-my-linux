@@ -232,7 +232,7 @@ Get_MEMInfo() {
     Log DEBUG " --MEMORY_TYPE=$MEMORY_TYPE"
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
     Log DEBUG " --MEMORY_SPEEDCONFIGURED=$MEMORY_SPEEDCONFIGURED"
-    Log DEBUG " --MEMORY_MANUFACTURER=$MEMORY_MANUFACTURER"
+    Log DEBUG " --MEMORY_MANUFACTURER=\"$MEMORY_MANUFACTURER\""
     Log DEBUG " --MEMORY_SERIALNUMBER=$MEMORY_SERIALNUMBER"
     
     Log SUCC "Get Memory info successful."
@@ -317,7 +317,7 @@ Get_DiskInfo() {
         DISK_SIZE="$DISK_SIZE $i:$((`echo $_DISK_SIZE | tr ' ' '*'`/1000/1000/999))"
 
         # check if disk in raid(1 in raid, 0 not in raid)
-        _DISK_ISINRAID=`if hdparm -i /dev/$i 2>/dev/null | grep -q Model; then echo 1; else echo 0; fi`
+        _DISK_ISINRAID=`if hdparm -i /dev/$i 2>/dev/null | grep -q Model; then echo 0; else echo 1; fi`
         DISK_ISINRAID="$DISK_ISINRAID $i:$_DISK_ISINRAID"
     done
     DISK_SIZE=`echo $DISK_SIZE`
@@ -356,10 +356,13 @@ Get_DiskInfo() {
 
             # get the disk Rotation Rate
             disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
+            if echo $disk_rotation_rate | grep -q "Solid State Device"; then
+                disk_rotation_rate=SSD
+            fi
             [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
             # get disk rotation rate
-            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
+            DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}: ${disk_rotation_rate}"
 
         fi
             
@@ -379,6 +382,9 @@ Get_DiskInfo() {
 
                 # get the disk Rotation Rate
                 disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
+                if echo $disk_rotation_rate | grep -q "Solid State Device"; then
+                    disk_rotation_rate=SSD
+                fi
                 [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
                 # get disk rotation rate
@@ -405,7 +411,9 @@ Get_DiskInfo() {
                 # get the disk info
                 disk_rotation_rate=`echo "$this_slot_info" | grep "Media Type" | awk -F':' '{print $2}' | sed -n '1p'`
                 disk_rotation_rate=`echo $disk_rotation_rate`
-
+                if echo $disk_rotation_rate | grep -q "Solid State Device"; then
+                    disk_rotation_rate=SSD
+                fi
                 DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
             # other not been tested
@@ -423,7 +431,7 @@ Get_DiskInfo() {
     # get the sata & ssd disk
     unset DISK_SSD DISK_SATA
     for i in $DISK_LIST; do
-        if echo $DISK_ROTATION_RATE_LIST | sed "s/' /'\n/g" | grep -w $i | grep -q "Solid State Device"; then
+        if echo $DISK_ROTATION_RATE_LIST | sed "s/' /'\n/g" | grep -w $i | grep -q "SSD"; then
             DISK_SSD="$DISK_SSD $i"
 
         else
