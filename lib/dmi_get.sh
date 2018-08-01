@@ -372,7 +372,7 @@ Get_DiskInfo() {
             [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
             # get disk rotation rate
-            DISK_ROTATION_RATE_LIST="${DISK_ROTATION_RATE_LIST} ${disk_path}:'${disk_rotation_rate}'"
+            DISK_ROTATION_RATE_LIST="${DISK_ROTATION_RATE_LIST} ${disk_path}:\'${disk_rotation_rate}\'"
 
         fi
             
@@ -497,17 +497,17 @@ Get_NetInfo() {
         NETWORK_PCIETHER_10G_BRAND=virtio
     fi
 
-    NETWORK_PCIETHER_1G_COUNT=`echo "$NETWORK_PCI_INFO" | grep " Gigabit Ethernet" | wc -l`
+    NETWORK_PCIETHER_1G_COUNT=`echo "$NETWORK_PCI_INFO" | grep " Gigabit " | wc -l`
     
     if [ "$NETWORK_PCIETHER_1G_COUNT" -gt 0 ] && [ -z "$NETWORK_PCIETHER_1G_BRAND" ]; then
-        NETWORK_PCIETHER_1G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " Gigabit Ethernet" | \
+        NETWORK_PCIETHER_1G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " Gigabit " | \
         sed  "s/.* Ethernet controller: \(.*\) Gigabit .*/\1/" | sort | uniq`
     fi
     
-    NETWORK_PCIETHER_10G_COUNT=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit Ethernet" | wc -l`
+    NETWORK_PCIETHER_10G_COUNT=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit " | wc -l`
     
     if [ "$NETWORK_PCIETHER_10G_COUNT" -gt 0 ] && [ -z "$NETWORK_PCIETHER_10G_BRAND" ]; then
-        NETWORK_PCIETHER_10G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit Ethernet" | \
+        NETWORK_PCIETHER_10G_BRAND=`echo "$NETWORK_PCI_INFO" | grep " 10-Gigabit " | \
         sed "s/.*Ethernet controller: \(.*\) 10-Gigabit .*/\1/" | sort | uniq`
     fi
     
