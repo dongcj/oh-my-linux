@@ -377,7 +377,7 @@ Get_DiskInfo() {
                 [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
                 # get disk rotation rate
-                DISK_ROTATION_RATE_LIST="${DISK_ROTATION_RATE_LIST} ${i}:\'${disk_rotation_rate}\'"
+                DISK_ROTATION_RATE_LIST="${DISK_ROTATION_RATE_LIST} ${i}:'${disk_rotation_rate}'"
             done
         fi
             
@@ -403,7 +403,7 @@ Get_DiskInfo() {
                 [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
                 # get disk rotation rate
-                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:\'${disk_rotation_rate}\'"
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
             # if it is LSI raid, use "MegaCli64 -pdlist ¨CaALL"
             elif [ "$raidcard_brand" = "LSI" ]; then
@@ -429,7 +429,7 @@ Get_DiskInfo() {
                 if echo $disk_rotation_rate | grep -q "Solid State Device"; then
                     disk_rotation_rate="SSD"
                 fi
-                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:\'${disk_rotation_rate}\'"
+                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
             # other not been tested
             else
@@ -632,7 +632,7 @@ Get_NetInfo() {
      fi
      
     [ -z "$NETWORK_GATEWAY" ] && NETWORK_GATEWAY=`netstat -rn | grep "UG" |grep "^0.0.0.0" | sed -n '1p' | awk '{print $2}'` && \
-    Log WARN "can NOT find \"GATEWAY\" in network config file, use \"ip route\" to get GATEWAY=$NETWORK_GATEWAY"
+    Log WARN "can NOT find \"GATEWAY\", current GATEWAY=$NETWORK_GATEWAY, mybe use DHCP."
 
     # Or the other method to Get active GATEWAY
     # ip route | sed -n 's/.*via \(.*\) dev.*/\1/p' | head -1
