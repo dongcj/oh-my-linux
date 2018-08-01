@@ -84,10 +84,10 @@ Install_Basic_Soft() {
     # if the has pci raid
     pci_info=`lspci`
     if echo "$pci_info" | grep -i raid | grep -iq mega; then
-        Run yum -y -q install MegaCli
+        Run $PKG_INST_CMD -y -q install MegaCli
 
     elif echo "$pci_info" | grep -i raid | grep -iq hewlett; then
-        Run yum -y -q install hpacucli
+        Run $PKG_INST_CMD -y -q install hpacucli
     fi
     
     Log SUCC "Install basic software successful."
@@ -217,6 +217,9 @@ Get_MEMInfo() {
     MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | \
     sed -n 's/.*Manufacturer: \(.*\)/\1/p' | sort | uniq | xargs`
     
+    MEMORY_SERIALNUMBER=`echo "$MEMORY_INFO" | \
+    sed -n 's/.*Serial Number: \(.*\)/\1/p' | sort | uniq | xargs`
+    
     Log DEBUG " --MEMORY_TOTAL=${MEMORY_TOTAL} GB"
     Log DEBUG " --MEMORY_FREE=${MEMORY_FREE} GB"
     Log DEBUG " --MEMORY_SLOT=$MEMORY_SLOT"
@@ -225,6 +228,7 @@ Get_MEMInfo() {
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
     Log DEBUG " --MEMORY_SPEEDCONFIGURED=$MEMORY_SPEEDCONFIGURED"
     Log DEBUG " --MEMORY_MANUFACTURER=$MEMORY_MANUFACTURER"
+    Log DEBUG " --MEMORY_SERIALNUMBER=$MEMORY_SERIALNUMBER"
     
     Log SUCC "Get Memory info successful."
 
