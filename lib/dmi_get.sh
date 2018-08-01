@@ -184,10 +184,10 @@ Get_CPUInfo() {
                 Intel /proc/cpuinfo >/dev/null; then echo Intel; else echo Unknown; fi`
     CPU_MODELNAME=`grep "model name" /proc/cpuinfo | uniq | awk -F":" '{print $2}' | sed 's/           / /' | xargs`
 
-    Log DEBUG " --CPU_THREAD=$CPU_THREAD"
     Log DEBUG " --CPU_PHYSICAL=$CPU_PHYSICAL"
     Log DEBUG " --CPU_IFHT=$CPU_IFHT"
     Log DEBUG " --CPU_CORE=$CPU_CORE"
+    Log DEBUG " --CPU_THREAD=$CPU_THREAD"
     Log DEBUG " --CPU_SPEEDCURRENT=$CPU_SPEEDCURRENT"
     Log DEBUG " --CPU_FAMILY=$CPU_FAMILY"
     Log DEBUG " --CPU_MODELNAME=\"$CPU_MODELNAME\""
@@ -226,7 +226,7 @@ Get_MEMInfo() {
     
     MEMORY_SPEED=${MEMORY_SPEED:-"Unknown"}
     
-    MEMORY_SPEEDCONFIGURED=`echo "$MEMORY_INFO" | grep " Speed: " | egrep "MHz|MT" | \
+    MEMORY_SPEEDCONFIGURED=`echo "$MEMORY_INFO" | grep " *Speed: " | egrep "MHz|MT" | \
     sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
     MEMORY_SPEEDCONFIGURED=${MEMORY_SPEEDCONFIGURED:-"Unknown"}
     
@@ -511,7 +511,8 @@ Get_NetInfo() {
         sed "s/.*Ethernet controller: \(.*\) 10-Gigabit .*/\1/" | sort | uniq`
     fi
     
-    NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo | tr -d ':' | xargs`
+    NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo \
+    grep -v veth | tr -d ':' | xargs`
 
     # get the physical ether
     unset NETWORK_PHYETHERS
