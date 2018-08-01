@@ -633,6 +633,7 @@ if [ "$SHLVL" -le 2 ]; then
 
     # assum use directly from command, not inital by other scripts
     Check_OS_Distrib
+    Install_Basic_Soft
     Get_SystemInfo
     Get_OSInfo
     Get_CPUInfo
