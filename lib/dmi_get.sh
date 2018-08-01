@@ -331,6 +331,7 @@ Get_DiskInfo() {
         _DISK_ISINRAID=`if hdparm -i /dev/$i 2>/dev/null | grep -q Model; then echo 0; else echo 1; fi`
         DISK_ISINRAID="$DISK_ISINRAID $i:$_DISK_ISINRAID"
     done
+    
     DISK_SIZE=`echo $DISK_SIZE`
     DISK_ISINRAID=`echo $DISK_ISINRAID`
 
@@ -342,6 +343,7 @@ Get_DiskInfo() {
             DISK_MOUNTED="$DISK_MOUNTED $i"
         fi
     done
+    
     DISK_MOUNTED=`echo $DISK_MOUNTED | xargs`
 
     # TODO: ssd disk? there is no good idea to test ssd (if ssds are in raid card)
@@ -354,29 +356,29 @@ Get_DiskInfo() {
     scsi_disk_info=`lsscsi | grep disk`
     
     if [ -z "$scsi_disk_info" ]; then
-    
-        # use blkid to detect
-        disk_path=`blkid | awk -F': ' '{print $1}'`
         
         # is vm?
-        if echo $disk_path | grep -q "/dev/vd[a-z]"; then
+        if echo $DISK_PATH | grep -q "/dev/vd[a-z]"; then
             Log WARN " --disk_path contain \"vd\", might be a vm"
         else
-            # test disk info
-            disk_info=`smartctl -i $disk_path`
+            
+            for i in $DISK_PATH; do
+                # test disk info
+                disk_info=`smartctl -i $i`
 
-            # get the disk Rotation Rate
-            disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
-            if echo $disk_rotation_rate | grep -q "Solid State Device"; then
-                disk_rotation_rate="SSD"
-            else
-                disk_rotation_rate=`echo $disk_rotation_rate`
-            fi
-            [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
+                # get the disk Rotation Rate
+                disk_rotation_rate=`echo "$disk_info" | grep "Rotation Rate" | awk -F':' '{print $2}'`
+                
+                if echo $disk_rotation_rate | grep -q "Solid State Device"; then
+                    disk_rotation_rate="SSD"
+                else
+                    disk_rotation_rate=`echo $disk_rotation_rate`
+                fi
+                [ -z "$disk_rotation_rate" ] && disk_rotation_rate="Unknown"
 
-            # get disk rotation rate
-            DISK_ROTATION_RATE_LIST="${DISK_ROTATION_RATE_LIST} ${disk_path}:\'${disk_rotation_rate}\'"
-
+                # get disk rotation rate
+                DISK_ROTATION_RATE_LIST="${DISK_ROTATION_RATE_LIST} ${i}:\'${disk_rotation_rate}\'"
+            done
         fi
             
     else
