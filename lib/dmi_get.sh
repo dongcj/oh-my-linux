@@ -116,7 +116,7 @@ Get_SystemInfo() {
     SYSTEM_MANUFACTURER=`echo "$DMIDECODE" | grep 'Manufacturer' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_PRODUCTNAME=`echo "$DMIDECODE" | grep 'Product Name' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_SERIALNUMBER=`echo "$DMIDECODE" | grep 'Serial Number' | head -n 1 | cut -f 2 -d':' | xargs`
-    SYSTEM_RACKHEIGHT=`dmidecode | grep 'Height: ' | awk '{print $2}'`
+    SYSTEM_RACKHEIGHT=`dmidecode | grep 'Height: ' | awk -F':' '{print $2}' | xargs`
     SYSTEM_BASEBOARD=`dmidecode -t baseboard | grep 'Manufacturer: ' | awk '{print $2}'`
     SYSTEM_BASEBOARDNAME=`dmidecode -t baseboard | grep 'Product Name: ' | awk -F':' '{print $NF}' | xargs`
     SYSTEM_UUID=`echo "$DMIDECODE" | grep 'UUID' | head -n 1 | cut -f 2 -d':' | xargs`
@@ -124,10 +124,10 @@ Get_SystemInfo() {
     
     Log DEBUG " --SYSTEM_MANUFACTURER=\"$SYSTEM_MANUFACTURER\""
     Log DEBUG " --SYSTEM_PRODUCTNAME=\"$SYSTEM_PRODUCTNAME\""
-    Log DEBUG " --SYSTEM_RACKHEIGHT=$SYSTEM_RACKHEIGHT"
-    Log DEBUG " --SYSTEM_SERIALNUMBER=$SYSTEM_SERIALNUMBER"
-    Log DEBUG " --SYSTEM_BASEBOARD=$SYSTEM_BASEBOARD"
-    Log DEBUG " --SYSTEM_BASEBOARDNAME=$SYSTEM_BASEBOARDNAME"
+    Log DEBUG " --SYSTEM_RACKHEIGHT=\"$SYSTEM_RACKHEIGHT\""
+    Log DEBUG " --SYSTEM_SERIALNUMBER=\"$SYSTEM_SERIALNUMBER\""
+    Log DEBUG " --SYSTEM_BASEBOARD=\"$SYSTEM_BASEBOARD\""
+    Log DEBUG " --SYSTEM_BASEBOARDNAME=\"$SYSTEM_BASEBOARDNAME\""
     Log DEBUG " --SYSTEM_UUID=$SYSTEM_UUID"
     
     Log SUCC "Get system info successful."
@@ -653,7 +653,7 @@ Get_NetInfo() {
 
     Log DEBUG " --NET_USE_ETHER=$NET_USE_ETHER"
     Log DEBUG " --NET_USE_ETHER_TYPE=$NET_USE_ETHER_TYPE"
-    Log DEBUG " --NETWORK_IPADDR=$NETWORK_IPADDR"
+    Log DEBUG " --NETWORK_IPADDR=\"$NETWORK_IPADDR\""
     Log DEBUG " --NETWORK_GATEWAY=$NETWORK_GATEWAY"
     Log DEBUG " --NETWORK_DNS=$NETWORK_DNS"
     Log DEBUG " --NETWORK_DOMAIN=$NETWORK_DOMAIN"
