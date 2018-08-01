@@ -592,8 +592,13 @@ Get_NetInfo() {
 
     fi
 
-    IP_ADDRESS_NETMASK=`ifconfig $NET_USE_ETHER | grep "inet" | \
-    sed "s/inet \(.*\) netmask \(.*\) broadcast .*/\1 \2/" | head -1 | xargs`
+    if [ "$OS" = "CentOS" ]; then
+        IP_ADDRESS_NETMASK=`ifconfig $NET_USE_ETHER | grep "inet " | \
+        sed "s/inet \(.*\) netmask \(.*\) broadcast .*/\1 \2/" | head -1 | xargs`
+     else
+        IP_ADDRESS_NETMASK=`ifconfig $NET_USE_ETHER | grep "inet " | \
+        sed "s/inet addr:\(.*\) .*  Mask:\(.*\)/\1 \2/" | head -1 | xargs`
+     fi
     # Other ip get method
     # ip addr show eth0|awk '/inet /{split($2,x,"/");print x[1]}'
     # ifconfig eth0| awk '{if ( $1 == "inet" && $3 ~ /^Bcast/) print $2}' | awk -F: '{print $2}'
@@ -613,7 +618,7 @@ Get_NetInfo() {
      fi
      
     [ -z "$NETWORK_GATEWAY" ] && NETWORK_GATEWAY=`netstat -rn | grep "UG" |grep "^0.0.0.0" | sed -n '1p' | awk '{print $2}'` && \
-    Log WARN "can NOT find \"GATEWAY\" in ifcfg-$NET_USE_ETHER, use \"ip route\" to get GATEWAY=$NETWORK_GATEWAY"
+    Log WARN "can NOT find \"GATEWAY\" in network config file, use \"ip route\" to get GATEWAY=$NETWORK_GATEWAY"
 
     # Or the other method to Get active GATEWAY
     # ip route | sed -n 's/.*via \(.*\) dev.*/\1/p' | head -1
