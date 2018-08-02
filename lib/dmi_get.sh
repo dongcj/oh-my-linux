@@ -61,15 +61,19 @@ Install_Basic_Soft() {
 
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
+    # basic software 
     if  bc -v &>/dev/null && lsscsi &>/dev/null; then
         Log DEBUG "${COLOR_YELLOW}Already installed, continue...${COLOR_CLOSE}"
         return
     fi
     
-    softlist="bash-completion bc bmon ethtool fio  hdparm  htop \
-    ipmitool iotop ifstat locales  lsscsi  mycli net-tools \
-    nmon ntp  pciutils python-pip  rsync smartmontools wget"
-    softlist=`echo $softlist`
+    softlist_basic="bc ethtool lsscsi net-tools smartmontools wget"
+    softlist_basic=`echo $softlist_basic`
+    
+    softlist_recommand="bash-completion bmon fio  hdparm  htop \
+    ipmitool iotop ifstat locales  mycli nmon ntp \
+    pciutils python-pip  rsync"
+    softlist_recommand=`echo $softlist_recommand`
 
     # add chkconfig for ubuntu
     if [ "$OS" = "Ubuntu" ]; then
@@ -88,7 +92,8 @@ Install_Basic_Soft() {
          fi
     fi
     
-    Run $PKG_INST_CMD $softlist
+    Run $PKG_INST_CMD $softlist_basic
+    Run $softlist_recommand $softlist_recommand
     
     # if the has pci raid
     pci_info=`lspci`
