@@ -121,7 +121,13 @@ Get_SystemInfo() {
     SYSTEM_MANUFACTURER=`echo "$DMIDECODE" | grep 'Manufacturer' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_PRODUCTNAME=`echo "$DMIDECODE" | grep 'Product Name' | head -n 1 | cut -f 2 -d':' | xargs`
     SYSTEM_SERIALNUMBER=`echo "$DMIDECODE" | grep 'Serial Number' | head -n 1 | cut -f 2 -d':' | xargs`
+
+    # height
     SYSTEM_RACKHEIGHT=`dmidecode | grep 'Height: ' | awk -F':' '{print $2}' | xargs`
+    if echo $SYSTEM_RACKHEIGHT | grep -q "Unspecified"; then
+        SYSTEM_RACKHEIGHT="Unknown"
+    fi
+    
     SYSTEM_BASEBOARD=`dmidecode -t baseboard | grep 'Manufacturer: ' | awk '{print $2}'`
     SYSTEM_BASEBOARDNAME=`dmidecode -t baseboard | grep 'Product Name: ' | awk -F':' '{print $NF}' | xargs`
     SYSTEM_UUID=`echo "$DMIDECODE" | grep 'UUID' | head -n 1 | cut -f 2 -d':' | xargs`
@@ -179,23 +185,37 @@ Get_CPUInfo() {
 
     Log DEBUG "${COLOR_YELLOW}Getting CPU info...${COLOR_CLOSE}"
     
-    CPU_THREAD=`egrep -c 'processor([[:space:]]+):.*' /proc/cpuinfo`
-    CPU_PHYSICAL=`grep "physical id" /proc/cpuinfo | sort | uniq | wc -l`
-    # if cpu has HT, one core has more than 2 (inclue 2) threads;
-    CPU_IFHT=`if [ $(grep "core id" /proc/cpuinfo | grep -w 0 | wc -l) -ge 2 ]; then echo 1; else echo 0;fi`
-    CPU_CORE=`if [ "$CPU_IFHT" -eq 1 ];then printf "%d" $((CPU_THREAD/2));else echo $CPU_THREAD;fi`
-    CPU_SPEEDCURRENT=`grep 'cpu MHz' /proc/cpuinfo | sort | sed -n '$p' | awk '{printf "%d", $NF}'`
-    CPU_FAMILY=`if grep AuthenticAMD /proc/cpuinfo >/dev/null; then echo AMD; elif grep \
-                Intel /proc/cpuinfo >/dev/null; then echo Intel; else echo Unknown; fi`
-    CPU_MODELNAME=`grep "model name" /proc/cpuinfo | uniq | awk -F":" '{print $2}' | sed 's/           / /' | xargs`
+    CPU_INFO=`dmidecode -t processor`
+    
+    # CPU name/type
+    CPU_MANUFACTURER=`echo "$CPU_INFO" | awk -F': ' '/Manufacturer/ {print $NF}' | sort | uniq`
+    CPU_FAMILY=`echo "$CPU_INFO" | awk -F': ' '/Family:/ {print $NF}' | sort | uniq`
+    CPU_MODELNAME="$CPU_MANUFACTURER $CPU_FAMILY"
+    CPU_MODELNAME=`echo $CPU_MODELNAME`
+    
+    CPU_VERSION=`echo "$CPU_INFO" | awk -F': ' '/Version:/ {print $NF}' | \
+      sort | uniq | sed 's/           / /' | xargs`
+    
+    # physical/core/thread
+    CPU_PHYSICAL=`echo "$CPU_INFO" | grep "Socket Designation" | wc -l`
+    CPU_CORE=`echo "$CPU_INFO" | grep "Core Count" | awk '{ x += $3 } END { print x }'`
+    CPU_THREAD=`echo "$CPU_INFO" | grep "Thread Count" | awk '{ x += $3 } END { print x }'`
 
+    # CPU speed
+    CPU_SPEEDMAX=`echo "$CPU_INFO" | grep  "Max Speed" | awk '{print $3}'`
+    CPU_SPEEDCURRENT=`echo "$CPU_INFO" | grep  "Current Speed" | awk '{print $3}'`
+    CPU_SPEEDNOW=`grep 'cpu MHz' /proc/cpuinfo | sort | sed -n '$p' | awk '{printf "%d", $NF}'`
+    
+    
+    Log DEBUG " --CPU_MODELNAME=\"$CPU_MODELNAME\""
+    Log DEBUG " --CPU_VERSION=\"$CPU_VERSION\""
+    
     Log DEBUG " --CPU_PHYSICAL=$CPU_PHYSICAL"
-    Log DEBUG " --CPU_IFHT=$CPU_IFHT"
     Log DEBUG " --CPU_CORE=$CPU_CORE"
     Log DEBUG " --CPU_THREAD=$CPU_THREAD"
-    Log DEBUG " --CPU_SPEEDCURRENT=$CPU_SPEEDCURRENT"
-    Log DEBUG " --CPU_FAMILY=$CPU_FAMILY"
-    Log DEBUG " --CPU_MODELNAME=\"$CPU_MODELNAME\""
+    
+    Log DEBUG " --CPU_SPEEDMAX=\"$CPU_SPEEDMAX\" MHz"
+    Log DEBUG " --CPU_SPEEDCURRENT=\"$CPU_SPEEDCURRENT\" MHz"
     
     Log SUCC "Get CPU info successful."
 }
