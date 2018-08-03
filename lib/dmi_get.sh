@@ -236,6 +236,8 @@ Get_MEMInfo() {
         MEMORY_TYPE="$MEMORY_TYPE $MEMORY_DDR"
     fi
     
+    MEMORY_TYPE=`echo $MEMORY_TYPE`
+    
     MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep "Size" | grep -v "No Module Installed" | wc -l`
     
     # MAX memory
