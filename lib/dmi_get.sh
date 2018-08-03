@@ -225,6 +225,9 @@ Get_MEMInfo() {
     MEMORY_TYPE=`echo "$MEMORY_INFO" | grep "Type: " | awk '{print $2}' | sort | uniq`
     MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep "Size" | grep -v "No Module Installed" | wc -l`
     
+    # MAX memory
+    MEMORY_MAX=`echo "$MEMORY_INFO" | grep "Maximum Capacity" | awk '{ x += $3 } END { print x }'`
+    
     # memory speed 
     MEMORY_SPEED=`echo "$MEMORY_INFO" | grep " *Speed: " | grep -v Clock | \
     sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
@@ -241,10 +244,11 @@ Get_MEMInfo() {
     MEMORY_SERIALNUMBER=`echo "$MEMORY_INFO" | sed -n 's/.*Serial Number: \(.*\)/\1/p' | \
     egrep -v "SerNum|BAD INDEX" | sort | uniq | xargs`
     
-    Log DEBUG " --MEMORY_TOTAL=${MEMORY_TOTAL} GB"
-    Log DEBUG " --MEMORY_FREE=${MEMORY_FREE} GB"
+    Log DEBUG " --MEMORY_TOTAL=\"${MEMORY_TOTAL} GB\""
+    Log DEBUG " --MEMORY_FREE=\"${MEMORY_FREE} GB\""
     Log DEBUG " --MEMORY_SLOT=$MEMORY_SLOT"
     Log DEBUG " --MEMORY_SLOTUSED=$MEMORY_SLOTUSED"
+    Log DEBUG " --MEMORY_MAX=$MEMORY_MAX"
     Log DEBUG " --MEMORY_TYPE=$MEMORY_TYPE"
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
     Log DEBUG " --MEMORY_SPEEDCONFIGURED=$MEMORY_SPEEDCONFIGURED"
