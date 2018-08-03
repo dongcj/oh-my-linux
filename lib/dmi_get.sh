@@ -202,9 +202,9 @@ Get_CPUInfo() {
     CPU_THREAD=`echo "$CPU_INFO" | grep "Thread Count" | awk '{ x += $3 } END { print x }'`
 
     # CPU speed
-    CPU_SPEEDMAX=`echo "$CPU_INFO" | grep  "Max Speed" | awk '{print $3}'`
-    CPU_SPEEDCURRENT=`echo "$CPU_INFO" | grep  "Current Speed" | awk '{print $3}'`
-    CPU_SPEEDNOW=`grep 'cpu MHz' /proc/cpuinfo | sort | sed -n '$p' | awk '{printf "%d", $NF}'`
+    CPU_SPEEDMAX=`echo "$CPU_INFO" | grep  "Max Speed" | awk '{print $3}' | sort | uniq | xargs`
+    CPU_SPEEDCURRENT=`echo "$CPU_INFO" | grep  "Current Speed" | awk '{print $3}' | sort | uniq | xargs`
+    CPU_SPEEDNOW=`grep 'cpu MHz' /proc/cpuinfo | sort | sed -n '$p' | awk '{printf "%d", $NF}' | sort | uniq | xargs`
     
     
     Log DEBUG " --CPU_MODELNAME=\"$CPU_MODELNAME\""
@@ -562,7 +562,7 @@ Get_NetInfo() {
     fi
     
     NETWORK_ALLETHERS=`ip a | egrep '^[0-9]*:' | awk '{ print $2 }' | grep -v lo | \
-    grep -v veth | tr -d ':' | xargs`
+    grep -v "veth" | grep -v "vnet" | tr -d ':' | xargs`
 
     # get the physical ether
     unset NETWORK_PHYETHERS
