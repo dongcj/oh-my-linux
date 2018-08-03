@@ -214,8 +214,8 @@ Get_CPUInfo() {
     Log DEBUG " --CPU_CORE=$CPU_CORE"
     Log DEBUG " --CPU_THREAD=$CPU_THREAD"
     
-    Log DEBUG " --CPU_SPEEDMAX=\"$CPU_SPEEDMAX\" MHz"
-    Log DEBUG " --CPU_SPEEDCURRENT=\"$CPU_SPEEDCURRENT\" MHz"
+    Log DEBUG " --CPU_SPEEDMAX=\"$CPU_SPEEDMAX MHz\""
+    Log DEBUG " --CPU_SPEEDCURRENT=\"$CPU_SPEEDCURRENT MHz\""
     
     Log SUCC "Get CPU info successful."
 }
