@@ -222,7 +222,20 @@ Get_MEMInfo() {
     MEMORY_INFO=`dmidecode -t memory`
     MEMORY_SLOT=`echo "$MEMORY_INFO" | grep "Memory Device" | wc -l`
     
-    MEMORY_TYPE=`echo "$MEMORY_INFO" | grep "Type: " | awk '{print $2}' | sort | uniq`
+    # memory type 
+    if echo "$MEMORY_INFO" | grep "Error Correction Type" | grep -q "ECC"; then
+        MEMORY_TYPE="$MEMORY_TYPE ECC"
+    fi
+
+    if echo "$MEMORY_INFO" | grep "Type Detail" | grep -wq "Registered"; then
+        MEMORY_TYPE="$MEMORY_TYPE REG"
+    fi
+    
+    MEMORY_DDR=`echo "$MEMORY_INFO" | grep "DDR" | awk '{print $2}' | sort | uniq`
+    if [ -n "$MEMORY_DDR" ]; then
+        MEMORY_TYPE="$MEMORY_TYPE $MEMORY_DDR"
+    fi
+    
     MEMORY_SLOTUSED=`echo "$MEMORY_INFO" | grep "Size" | grep -v "No Module Installed" | wc -l`
     
     # MAX memory
@@ -249,7 +262,7 @@ Get_MEMInfo() {
     Log DEBUG " --MEMORY_SLOT=$MEMORY_SLOT"
     Log DEBUG " --MEMORY_SLOTUSED=$MEMORY_SLOTUSED"
     Log DEBUG " --MEMORY_MAX=\"$MEMORY_MAX GB\""
-    Log DEBUG " --MEMORY_TYPE=$MEMORY_TYPE"
+    Log DEBUG " --MEMORY_TYPE=\"$MEMORY_TYP\""
     Log DEBUG " --MEMORY_SPEED=$MEMORY_SPEED"
     Log DEBUG " --MEMORY_SPEEDCONFIGURED=$MEMORY_SPEEDCONFIGURED"
     Log DEBUG " --MEMORY_MANUFACTURER=\"$MEMORY_MANUFACTURER\""
