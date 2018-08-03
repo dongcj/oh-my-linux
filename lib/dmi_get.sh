@@ -219,7 +219,7 @@ Get_MEMInfo() {
     _MEMORY_FREE=`echo "$MEM_INFO" | grep MemFree | awk  '{print $2}'`
     MEMORY_FREE=`printf "%G" $(echo "scale = 1; $_MEMORY_FREE/1024/1002" | bc)`
     
-    MEMORY_INFO=`dmidecode --type 17`
+    MEMORY_INFO=`dmidecode -t memory`
     MEMORY_SLOT=`echo "$MEMORY_INFO" | grep "Memory Device" | wc -l`
     
     MEMORY_TYPE=`echo "$MEMORY_INFO" | grep "Type: " | awk '{print $2}' | sort | uniq`
