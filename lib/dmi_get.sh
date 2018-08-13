@@ -112,9 +112,9 @@ Install_Basic_Soft() {
         fi
 
         # install 
-        Run $PKG_INST_CMD install MegaCli
+        Run $PKG_INST_CMD megacli megactl megaraid-status
     elif echo "$pci_info" | grep -i raid | grep -iq hewlett; then
-        Run $PKG_INST_CMD install hpacucli
+        Run $PKG_INST_CMD hpacucli
     fi
     
     Log SUCC "Install basic software successful."
