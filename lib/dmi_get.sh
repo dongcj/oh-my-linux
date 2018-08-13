@@ -81,6 +81,7 @@ Install_Basic_Soft() {
         # prepare the apt
         Run dpkg --configure -a
         Run apt -y autoremove
+        Run apt update
         
         which chkconfig || { rm -rf /usr/bin/chkconfig && \
         Run $PKG_INST_CMD sysv-rc-conf rcconf && \
@@ -88,20 +89,32 @@ Install_Basic_Soft() {
         
     elif [ "$OS" = "CentOS" ]; then
         if ! rpm -qa | grep -iq epel; then
-            yum install -y epel-release
+            Run yum update
+            Run yum install -y epel-release
          fi
     fi
     
     Run $PKG_INST_CMD $softlist_basic
-    Run $softlist_recommand $softlist_recommand
+    Run $PKG_INST_CMD $softlist_recommand
     
     # if the has pci raid
     pci_info=`lspci`
     if echo "$pci_info" | grep -i raid | grep -iq mega; then
-        Run $PKG_INST_CMD -y -q install MegaCli
+        if [ "$OS" = "Ubuntu" ]; then
+        
+          # add raid repo & import key
+          mkdir -p /etc/apt/sources.list.d/
+          echo "deb http://hwraid.le-vert.net/ubuntu precise main" > \
+          /etc/apt/sources.list.d/hwraid.list
+          wget -O - http://hwraid.le-vert.net/debian/hwraid.le-vert.net.gpg.key | \
+          sudo apt-key add -
+          apt update
+        fi
 
+        # install 
+        Run $PKG_INST_CMD install MegaCli
     elif echo "$pci_info" | grep -i raid | grep -iq hewlett; then
-        Run $PKG_INST_CMD -y -q install hpacucli
+        Run $PKG_INST_CMD install hpacucli
     fi
     
     Log SUCC "Install basic software successful."

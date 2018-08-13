@@ -175,7 +175,7 @@ Rsync_File() {
 
 
 ######################################################################
-# 作用: 将当前运行机器上的 文件/消息/函数 回推给installer,
+# 作用: 将当前运行机器上的 文件/消息/函数 回推给 installer,
 # 用法: Pusher <TYPE> <FILE_OR_MSG_OR_FUN>
 # 注意：TYPE: FILE / MSG / FUNCTION;
 # ++ 文件会推送至ceph-ai上相同的目录, 但是后缀名会加上.$(hostname -s)
