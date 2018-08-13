@@ -62,7 +62,7 @@ Install_Basic_Soft() {
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
     # basic software 
-    if ! [ -f /etc/apt/sources.list.d/hw_raid.list ]; then
+    if  bc -v &>/dev/null && lsscsi && which ethtool &>/dev/null; then
         Log DEBUG "${COLOR_YELLOW}Already installed, continue...${COLOR_CLOSE}"
         return
     fi
