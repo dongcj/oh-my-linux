@@ -62,7 +62,7 @@ Install_Basic_Soft() {
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
     # basic software 
-    if  bc -v &>/dev/null && lsscsi &>/dev/null; then
+    if ! [ -f /etc/apt/sources.list.d/hw_raid.list ]; then
         Log DEBUG "${COLOR_YELLOW}Already installed, continue...${COLOR_CLOSE}"
         return
     fi
@@ -105,7 +105,7 @@ Install_Basic_Soft() {
           # add raid repo & import key
           mkdir -p /etc/apt/sources.list.d/
           echo "deb http://hwraid.le-vert.net/ubuntu precise main" > \
-          /etc/apt/sources.list.d/hwraid.list
+          /etc/apt/sources.list.d/hw_raid.list
           wget -O - http://hwraid.le-vert.net/debian/hwraid.le-vert.net.gpg.key | \
           sudo apt-key add -
           apt update
