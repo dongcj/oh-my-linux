@@ -343,7 +343,7 @@ Get_DiskInfo() {
     DISK_COUNT=`echo ${DISK_LIST} | wc -w | xargs`
 
     # root disk
-    DISK_ROOTTYPE=`echo "$blkinfo" | grep -w "part /" | awk '{print $(NF-1)}'`
+    DISK_ROOTTYPE=`echo "$blkinfo" | grep -w " /" | awk '{print $(NF-1)}'`
 
     # get the root volume/partition
     root_vol_or_part=`lsblk  --output NAME,MOUNTPOINT -P | grep "MOUNTPOINT=\"/\"" | sed -n 's/NAME="\(.*\)" MOUNTPOINT=.*/\1/p'`
