@@ -365,7 +365,7 @@ Get_DiskInfo() {
     unset DISK_INLVM_RAID
     for i in $DISK_LIST; do
         # in lvm
-        if pvs 2>/dev/null | grep -wq $i; then
+        if pvs 2>/dev/null | grep -q "/dev/$i"; then
             DISK_INLVM_RAID="$DISK_INLVM_RAID $i"
         fi
 
