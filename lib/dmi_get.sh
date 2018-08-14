@@ -62,7 +62,8 @@ Install_Basic_Soft() {
     Log DEBUG "${COLOR_YELLOW}Installing basic software...${COLOR_CLOSE}"
     
     # basic software 
-    if  bc -v &>/dev/null && lsscsi && which ethtool &>/dev/null; then
+    if  bc -v &>/dev/null && lsscsi &>/dev/null && \
+    which ethtool &>/dev/null; then
         Log DEBUG "${COLOR_YELLOW}Already installed, continue...${COLOR_CLOSE}"
         return
     fi
@@ -96,6 +97,11 @@ Install_Basic_Soft() {
     
     Run $PKG_INST_CMD $softlist_basic
     Run $PKG_INST_CMD $softlist_recommand
+    
+    # use mycli instead of mysql command
+    if `which mycli` &>/dev/null; then
+        ln -s `which mycli`  /usr/local/bin/mysql
+    fi
     
     # if the has pci raid
     pci_info=`lspci`
@@ -439,14 +445,28 @@ Get_DiskInfo() {
         fi
             
     else
+        
+        # check the raid card brand
+        if echo $DISK_RAIDCARD | grep -q LSI; then
+            raidcard_brand=LSI
+        elif echo $DISK_RAIDCARD | grep -q HP; then
+            raidcard_brand=HP
+        else 
+            raidcard_brand=Other
+        fi    
+            
         while read line; do
 
             disk_path=`echo $line | awk '{print $NF}'`
-            raidcard_brand=`echo $line | awk '{print $3}'`
+            disk_controller=`echo $line | awk '{print $3}'`
             
             # if is ATA
-            if [ "$raidcard_brand" = "ATA" ]; then
+            if [ "$disk_controller" = "ATA" ]; then
 
+                if [ "$raidcard_brand" != "none" ]; then
+                    Log WARN " --You have raid card type: \"${raidcard_brand}\", but useless."
+                fi
+                
                 Log DEBUG " --$disk_path is JBOD mode"
 
                 # test disk info
@@ -465,38 +485,53 @@ Get_DiskInfo() {
                 DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
             # if it is LSI raid, use "MegaCli64 -pdlist ¨CaALL"
-            elif [ "$raidcard_brand" = "LSI" ]; then
-
-                Log DEBUG " --$disk_path under control $raidcard_brand"
-
-                MEGACLI="/opt/MegaRAID/MegaCli/MegaCli64"
-
-                # TODO: currently, only LSI raid card support
-
-                # show all the physical disk info
-                MEGA_PDLIST_INFO=`$MEGACLI -PDList -aAll`
-
-                # "scsi_dev_num" get from lsscsi
-                scsi_dev_num=`echo $line | awk '{print $1}' | awk -F':' '{print $3}'`
-
-                # get the slot number of MEGA_PDLIST_INFO
-                this_slot_info=`echo "$MEGA_PDLIST_INFO" | sed -n "/Slot Number: $scsi_dev_num/, /Drive has flagged a S.M.A.R.T alert/p"`
-
-                # get the disk info
-                disk_rotation_rate=`echo "$this_slot_info" | grep "Media Type" | awk -F':' '{print $2}' | sed -n '1p'`
-                disk_rotation_rate=`echo $disk_rotation_rate`
-                if echo $disk_rotation_rate | grep -q "Solid State Device"; then
-                    disk_rotation_rate="SSD"
-                else
-                    disk_rotation_rate=`echo $disk_rotation_rate`
-                fi
-                DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
-
-            # other not been tested
             else
-                Log ERROR "i DO NOT know the disk $disk_path under control raid card: $raidcard_brand, now only support LSI(MegaRaid) and JBOD"
-            fi
+                
+                if [ "$raidcard_brand" = "LSI" ]; then
 
+                    Log DEBUG " --$disk_path under control $raidcard_brand"
+
+                    MEGACLI="/opt/MegaRAID/MegaCli/MegaCli64"
+                    
+                    if ! [ -x $MEGACLI ]; then
+                        MEGACLI=/usr/sbin/megacli
+                    fi
+                    
+                    if ! [ -x $MEGACLI ]; then
+                        MEGACLI=`which megacli`
+                    fi
+                    
+                    if [ -z "$MEGACLI" ]; then
+                        Log WARN " --no megacli command found!"
+                    fi
+                    
+                    # TODO: currently, only LSI raid card support
+
+                    # show all the physical disk info
+                    MEGA_PDLIST_INFO=`$MEGACLI -PDList -aAll`
+
+                    # "scsi_dev_num" get from lsscsi
+                    scsi_dev_num=`echo $line | awk '{print $1}' | awk -F':' '{print $3}'`
+
+                    # get the slot number of MEGA_PDLIST_INFO
+                    this_slot_info=`echo "$MEGA_PDLIST_INFO" | sed -n "/Slot Number: $scsi_dev_num/, /Drive has flagged a S.M.A.R.T alert/p"`
+
+                    # get the disk info
+                    disk_rotation_rate=`echo "$this_slot_info" | grep "Media Type" | awk -F':' '{print $2}' | sed -n '1p'`
+                    disk_rotation_rate=`echo $disk_rotation_rate`
+                    if echo $disk_rotation_rate | grep -q "Solid State Device"; then
+                        disk_rotation_rate="SSD"
+                    else
+                        disk_rotation_rate=`echo $disk_rotation_rate`
+                    fi
+                    DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
+                
+                
+                # other not been tested
+                else
+                    Log ERROR "i DO NOT know the disk $disk_path under control raid card: $raidcard_brand, now only support LSI(MegaRaid) and JBOD"
+                fi
+            fi
         done <<<"$scsi_disk_info"
     fi
 
