@@ -68,11 +68,11 @@ Install_Basic_Soft() {
         return
     fi
     
-    softlist_basic="bc ethtool lsscsi net-tools smartmontools wget"
+    softlist_basic="bc ethtool lsscsi net-tools smartmontools wget curl"
     softlist_basic=`echo $softlist_basic`
     
     softlist_recommand="bash-completion bmon fio  hdparm  htop \
-    ipmitool iotop ifstat locales  mycli nmon ntp \
+    ipmitool iotop ifstat locales  mycli nmon ntp jq \
     pciutils python-pip  rsync"
     softlist_recommand=`echo $softlist_recommand`
 
@@ -137,10 +137,22 @@ Get_SystemInfo() {
     Log DEBUG "${COLOR_YELLOW}Getting system info...${COLOR_CLOSE}"
     
     DMIDECODE=`dmidecode -t system`
+    
     SYSTEM_MANUFACTURER=`echo "$DMIDECODE" | grep 'Manufacturer' | head -n 1 | cut -f 2 -d':' | xargs`
+    if echo $SYSTEM_MANUFACTURER | grep -q "To be filled by"; then
+        SYSTEM_MANUFACTURER=Unknown
+    fi
+    
     SYSTEM_PRODUCTNAME=`echo "$DMIDECODE" | grep 'Product Name' | head -n 1 | cut -f 2 -d':' | xargs`
+    if echo $SYSTEM_PRODUCTNAME | grep -q "To be filled by"; then
+        SYSTEM_PRODUCTNAME=Unknown
+    fi
+    
     SYSTEM_SERIALNUMBER=`echo "$DMIDECODE" | grep 'Serial Number' | head -n 1 | cut -f 2 -d':' | xargs`
-
+    if echo $SYSTEM_SERIALNUMBER | grep -q "To be filled by"; then
+        SYSTEM_SERIALNUMBER=Unknown
+    fi
+    
     # height
     SYSTEM_RACKHEIGHT=`dmidecode | grep 'Height: ' | awk -F':' '{print $2}' | xargs`
     if echo $SYSTEM_RACKHEIGHT | grep -q "Unspecified"; then
@@ -158,7 +170,7 @@ Get_SystemInfo() {
     Log DEBUG " --SYSTEM_SERIALNUMBER=\"$SYSTEM_SERIALNUMBER\""
     Log DEBUG " --SYSTEM_BASEBOARD=\"$SYSTEM_BASEBOARD\""
     Log DEBUG " --SYSTEM_BASEBOARDNAME=\"$SYSTEM_BASEBOARDNAME\""
-    Log DEBUG " --SYSTEM_UUID=$SYSTEM_UUID"
+    Log DEBUG " --SYSTEM_UUID=\"${SYSTEM_UUID}\""
     
     Log SUCC "Get system info successful."
 }
@@ -293,10 +305,10 @@ Get_MEMInfo() {
     MEMORY_SPEEDCONFIGURED=${MEMORY_SPEEDCONFIGURED:-"Unknown"}
     
     MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | sed -n 's/.*Manufacturer: \(.*\)/\1/p' | \
-    egrep -v "Manufacturer|BAD INDEX" | sort | uniq | xargs`
+    egrep -v "Manufacturer|BAD INDEX|Empty" | sort | uniq | xargs`
     
     MEMORY_SERIALNUMBER=`echo "$MEMORY_INFO" | sed -n 's/.*Serial Number: \(.*\)/\1/p' | \
-    egrep -v "SerNum|BAD INDEX" | sort | uniq | xargs`
+    egrep -v "SerNum|BAD INDEX|Empty" | sort | uniq | xargs`
     
     Log DEBUG " --MEMORY_TOTAL=\"${MEMORY_TOTAL} GB\""
     Log DEBUG " --MEMORY_FREE=\"${MEMORY_FREE} GB\""
@@ -379,7 +391,7 @@ Get_DiskInfo() {
 
     # get all disk size & raid
     _ROOT_DISK_SIZE=`fdisk -l /dev/$DISK_ROOT 2>/dev/null | grep bytes | sed -n '1p' | awk '{print $(NF - 3)}'`
-    DISK_ROOTSIZE="$((`echo $_ROOT_DISK_SIZE | tr ' ' '*'`/1000/1000/999))"
+    DISK_ROOTSIZE="$((`echo $_ROOT_DISK_SIZE | tr ' ' '*'` / 1000 / 1000 / 999))"
 
     DISK_RAIDCARD=`lspci | grep -i raid | awk -F':' '{print $3}'`
     DISK_RAIDCARD=`echo $DISK_RAIDCARD`
