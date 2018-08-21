@@ -5,7 +5,14 @@
 #
 
 if ! Log &>/dev/null; then  
-    Log() { echo "[ $1 ] : $2"; }
+    Log() { 
+        word_length=`echo $1 | awk '{print length($0)}'`
+        if [ $word_length -eq 4 ]; then
+            echo "[ $1  ] : $2"
+        else
+            echo "[ $1 ] : $2" 
+        fi
+    }
     FBS_ESC=`echo -en "\033"`
     COLOR_RED="${FBS_ESC}[1;31m"      
     COLOR_GREEN="${FBS_ESC}[1;32m";    
