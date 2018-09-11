@@ -75,10 +75,10 @@ Install_Basic_Soft() {
         return
     fi
     
-    softlist_basic="bc ethtool lsscsi net-tools smartmontools wget curl"
+    softlist_basic="bc ethtool lsscsi net-tools dmidecode smartmontools wget curl"
     softlist_basic=`echo $softlist_basic`
     
-    softlist_recommand="bash-completion bmon fio  hdparm  htop \
+    softlist_recommand="bash-completion sysstat bmon fio  hdparm  htop \
     ipmitool iotop ifstat locales  mycli nmon ntp jq \
     pciutils python-pip  rsync"
     softlist_recommand=`echo $softlist_recommand`
@@ -312,10 +312,10 @@ Get_MEMInfo() {
     MEMORY_SPEEDCONFIGURED=${MEMORY_SPEEDCONFIGURED:-"Unknown"}
     
     MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | sed -n 's/.*Manufacturer: \(.*\)/\1/p' | \
-    egrep -v "Manufacturer|BAD INDEX|Empty" | sort | uniq | xargs`
+    egrep -v "Manufacturer|BAD INDEX|Empty|Not Specified" | sort | uniq | xargs`
     
     MEMORY_SERIALNUMBER=`echo "$MEMORY_INFO" | sed -n 's/.*Serial Number: \(.*\)/\1/p' | \
-    egrep -v "SerNum|BAD INDEX|Empty" | sort | uniq | xargs`
+    egrep -v "SerNum|BAD INDEX|Empty|Not Specified" | sort | uniq | xargs`
     
     Log DEBUG " --MEMORY_TOTAL=\"${MEMORY_TOTAL} GB\""
     Log DEBUG " --MEMORY_FREE=\"${MEMORY_FREE} GB\""
@@ -397,7 +397,7 @@ Get_DiskInfo() {
     DISK_INLVM_RAID=`echo $DISK_INLVM_RAID`
 
     # get all disk size & raid
-    _ROOT_DISK_SIZE=`fdisk -l /dev/$DISK_ROOT 2>/dev/null | grep bytes | sed -n '1p' | awk '{print $(NF - 3)}'`
+    _ROOT_DISK_SIZE=`fdisk -l /dev/$DISK_ROOT 2>/dev/null | grep bytes | sed -n '1p' | sed -n 's/.*, \(.*\) bytes.*/\1/p'`
     DISK_ROOTSIZE="$((`echo $_ROOT_DISK_SIZE | tr ' ' '*'` / 1000 / 1000 / 999))"
 
     DISK_RAIDCARD=`lspci | grep -i raid | awk -F':' '{print $3}'`
@@ -406,7 +406,7 @@ Get_DiskInfo() {
 
     unset DISK_SIZE DISK_ISINRAID
     for i in $DISK_LIST; do
-        _DISK_SIZE=`fdisk -l /dev/$i 2>/dev/null | grep bytes | sed -n '1p' | awk '{print $(NF - 3)}'`
+        _DISK_SIZE=`fdisk -l /dev/$i 2>/dev/null | grep bytes | sed -n '1p' | sed -n 's/.*, \(.*\) bytes.*/\1/p'`
         DISK_SIZE="$DISK_SIZE $i:$((`echo $_DISK_SIZE | tr ' ' '*'`/1000/1000/999))"
 
         # check if disk in raid(1 in raid, 0 not in raid)
@@ -735,10 +735,10 @@ Get_NetInfo() {
     
     if [ -f /etc/network/interfaces ]; then
         NETWORK_GATEWAY=`grep -i "^ *gateway" /etc/network/interfaces | awk '{print $2}' | sed -n '1p'`
-     elif [ -f /etc/sysconfig/network-scripts/ifcfg-$NET_USE_ETHER ]; then
+    elif [ -f /etc/sysconfig/network-scripts/ifcfg-$NET_USE_ETHER ]; then
         NETWORK_GATEWAY=`grep "^ *GATEWAY=" /etc/sysconfig/network-scripts/ifcfg-$NET_USE_ETHER | \
           awk -F"=" '{print $2}' | sed -n '1p'`
-     fi
+    fi
      
     [ -z "$NETWORK_GATEWAY" ] && NETWORK_GATEWAY=`netstat -rn | grep "UG" |grep "^0.0.0.0" | sed -n '1p' | awk '{print $2}'` && \
     Log WARN "can NOT find \"GATEWAY\", current GATEWAY=$NETWORK_GATEWAY, mybe use DHCP."

@@ -1,0 +1,3 @@
+
+
+mkdir -p /etc/scripts
