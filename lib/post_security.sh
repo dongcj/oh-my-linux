@@ -36,6 +36,13 @@ Config_Security() {
     
     sed -i s'/Defaults.*requiretty/#Defaults requiretty'/g /etc/sudoers
     
+    # sshd config
+    sed -i "s/#MaxAuthTries 6/MaxAuthTries 6/" /etc/ssh/sshd_config 
+    
+    # add continue input failure 3 ,passwd unlock time 5 minite
+    # this 
+    #sed -i 's#auth        required      pam_env.so#auth        required      pam_env.so\nauth       required       pam_tally.so  onerr=fail deny=3 unlock_time=300\nauth           required     /lib/security/$ISA/pam_tally.so onerr=fail deny=3 unlock_time=300#' /etc/pam.d/system-auth
+
     Log DEBUG "Config security successful."
 }
 
@@ -49,30 +56,14 @@ Config_Limits() {
 
     Log DEBUG "Config limits..."
     
-    ulimit -n 655350
-    ulimit -u 409600
-    
-    # seting user profile
-    USER_PROFILE=~/.profile
-    if ! grep -q "ulimit" $USER_PROFILE; then
-        echo "ulimit -n 65535" >>$USER_PROFILE
-        echo "ulimit -u 192098" >>$USER_PROFILE
-        echo "ulimit -i 192098" >>$USER_PROFILE
-    fi
-    source $USER_PROFILE
-
+    ulimit -n 65536
+     
     #/etc/security/limits.conf
     LIMITS_CONF=/etc/security/limits.conf
-    grep -q "^[^#].*soft.*nproc" $LIMITS_CONF  || echo "*       soft    nproc   131072" >>$LIMITS_CONF
-    grep -q "^[^#].*hard.*nproc" $LIMITS_CONF  || echo "*       hard    nproc   131072" >>$LIMITS_CONF
-    grep -q "^[^#].*soft.*nofile" $LIMITS_CONF || echo "*       soft    nofile   655360" >>$LIMITS_CONF
-    grep -q "^[^#].*hard.*nofile" $LIMITS_CONF || echo "*       hard    nofile   655360" >>$LIMITS_CONF
-    
-    if [ -d /etc/security/limits.d ]; then
-        echo -e "*\tsoft\tnofile\t655350" > /etc/security/limits.d/90-nproc.conf
-        echo -e "*\thard\tnofile\t655350" >> /etc/security/limits.d/90-nproc.conf
-    fi
-    
+    grep -q "^[^#].*soft.*nofile" $LIMITS_CONF || echo "*       soft    nofile   32768" >>$LIMITS_CONF
+    grep -q "^[^#].*hard.*nofile" $LIMITS_CONF || echo "*       hard    nofile   65536" >>$LIMITS_CONF
+    grep -q " *root *- *nofile" $LIMITS_CONF   || echo "root    -       nofile   65536" >>$LIMITS_CONF
+
     Log DEBUG "Config limits successful."
 }
 

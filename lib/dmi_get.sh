@@ -79,7 +79,7 @@ Install_Basic_Soft() {
     softlist_basic=`echo $softlist_basic`
     
     softlist_recommand="bash-completion sysstat bmon fio  hdparm  htop \
-    ipmitool iotop ifstat locales  mycli nmon ntp jq \
+    ipmitool iotop ifstat locales  mycli nmon ntp jq psmisc \
     pciutils python-pip  rsync"
     softlist_recommand=`echo $softlist_recommand`
 

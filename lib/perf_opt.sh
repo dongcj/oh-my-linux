@@ -14,7 +14,9 @@ Config_SSH_Server() {
     Log DEBUG "Config sshd server..."
     
     SSHD_CONF=/etc/ssh/sshd_config;
+    sed -i '/Port 22/s/.*/Port 46178/' $SSHD_CONF
     sed -i '/UseDNS/s/.*/UseDNS no/' $SSHD_CONF
+    
     # Make ssh faster
     sed -i "/^[[:space:]]*GSSAPIAuthentication/s/.*/GSSAPIAuthentication no/" $SSHD_CONF
     sudo sed -i '/PermitRootLogin prohibit-password/s/.*/PermitRootLogin yes/' $SSHD_CONF
@@ -22,6 +24,12 @@ Config_SSH_Server() {
     grep -q "ClientAliveInterval=" $SSHD_CONF || \
       echo ClientAliveInterval=60 >> /etc/ssh/sshd_config
       
+    if which systemctl &>/dev/null; then
+        systemctl restart sshd &>/dev/null || systemctl restart ssh &>/dev/null
+    else
+        service sshd restart &>/dev/null || service ssh restart &>/dev/null 
+     fi 
+     
     # Use banner
     cat <<EOF >/etc/banner
  * * * * * * * * * * * W A R N I N G * * * * * * * * * * * * *
@@ -34,10 +42,10 @@ AND DATA CONTENT BEING MONITORED. ALL PERSONS ARE HEREBY
 NOTIFIED THAT THE USE OF THIS SYSTEM CONSTITUTES CONSENT TO
 MONITORING AND AUDITING.
 EOF
-    if ! grep -q Krrish /etc/banner; then
-        echo -e "\t\033[1;32mServer Management by Krrish\033[0m" >>/etc/banner
-        echo >>/etc/banner
-    fi
+    # if ! grep -q Krrish /etc/banner; then
+        # echo -e "\t\033[1;32mServer Management by Krrish\033[0m" >>/etc/banner
+        # echo >>/etc/banner
+    # fi
 
     # sed -i '/Banner/s/.*/Banner \/etc\/banner/' /etc/ssh/sshd_config
 

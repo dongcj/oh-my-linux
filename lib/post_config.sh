@@ -21,6 +21,8 @@ Config_Lang() {
     PROFILE_CONF=/etc/profile
     if ! grep -q "LANG=en_US.UTF-8" $PROFILE_CONF; then
         echo "export LANG=en_US.UTF-8" >>$PROFILE_CONF
+        echo "export LC=en_US.UTF-8" >>$PROFILE_CONF
+        echo "export LC_ALL=en_US.UTF-8" >>$PROFILE_CONF
     fi
     source $PROFILE_CONF
     
@@ -444,15 +446,19 @@ Config_Vim() {
     Log DEBUG "Config vim..."
 
     # vim setting
-    if ! grep -q "set paste" /etc/vimrc &>/dev/null; then
-        echo "set history=1000" >> /etc/vimrc
-        echo "set expandtab" >> /etc/vimrc
-        echo "set ai" >> /etc/vimrc
-        echo "set tabstop=4" >> /etc/vimrc
-        echo "set shiftwidth=4" >> /etc/vimrc
-        echo "set paste" >> /etc/vimrc
-        echo "colo delek" >> /etc/vimrc
-        echo 'syntax on' >> /etc/vimrc
+    VIM_CONF=/etc/vim/vimrc
+    if ! grep -q "Add by krrish" $VIM_CONF &>/dev/null; then
+        echo "\" Add by krrish" >> $VIM_CONF
+        echo "set history=1000" >> $VIM_CONF
+        echo "set expandtab" >> $VIM_CONF
+        echo "set ai" >> $VIM_CONF
+        echo "set tabstop=4" >> $VIM_CONF
+        echo "set shiftwidth=4" >> $VIM_CONF
+        echo "set paste" >> $VIM_CONF
+        echo "set hls" >> $VIM_CONF
+        echo "colo delek" >> $VIM_CONF
+        echo 'syntax on' >> $VIM_CONF
+        echo >> $VIM_CONF
     fi
 
     # vim as default editor
@@ -676,7 +682,7 @@ Config_Snippets() {
 }
 
 ######################################################################
-# 作用: 配置库 
+# 作用: 执行清理 
 # 用法: CleanUP
 # 注意：
 ######################################################################
