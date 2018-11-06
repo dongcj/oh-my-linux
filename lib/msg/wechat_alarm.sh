@@ -2,9 +2,19 @@
 
 ### Usage:
 
-## import wechat alarm 
-# mkdir -p /etc/scripts/.sender/ && curl -fsSL --connect-timeout 8 \
-# https://gist.github.com/dongcj/a5359c870fa4527a7e121e2f2c48b7f0/raw/ >/etc/scripts/.sender/wechat_alarm.sh
+# import wechat alarm
+# mkdir -p /etc/scripts/.sender/
+# if ! [ -f /etc/scripts/.sender/wechat_alarm.sh ]; then
+  # echo "starting to download wechat_alarm.sh.."
+  # if ! curl -fsSL --connect-timeout 8 \
+    # https://gist.github.com/dongcj/a5359c870fa4527a7e121e2f2c48b7f0/raw/ >/etc/scripts/.sender/wechat_alarm.sh; then
+        # echo "download wechat_alarm.sh failed"
+        # echo "url: https://gist.github.com/dongcj/a5359c870fa4527a7e121e2f2c48b7f0/raw/"
+        # echo "you can download it to /etc/scripts/.sender/wechat_alarm.sh manual"
+        # echo "and run it again"
+        # exit 1
+  # fi
+# fi
 # chmod a+x /etc/scripts/.sender/*.sh
 
 ## send alarm
@@ -34,9 +44,21 @@ HIS_DIR=/etc/scripts/.his/`date "+%Y"`/`date "+%m"`
 HIS_FILE=${BIN}_`date "+%d"`
 mkdir -p $HIS_DIR
 
-IP_ADDR=$(ip route get 8.8.8.8 | grep src | \
+IP_ADDR_LOCAL=$(ip route get 8.8.8.8 | grep src | \
   awk '{ i=1; while(i<NF) { if ( $i == "src" ) print $(i+1); i++ }}')
+IP_ADDR_OUTTER_IP=`curl -s --connect-timeout 5 -4 ip.sb`
+IP_ADDR_OUTTER_LOC=`curl -sSL https://api.ip.sb/geoip | jq .city`
+
+if [ "$IP_ADDR_LOCAL" = "$IP_ADDR_OUTTER_IP" ]; then
+    IP_ADDR="$IP_ADDR_OUTTER(${IP_ADDR_OUTTER_LOC})"
+else
+    IP_ADDR="${IP_ADDR_LOCAL}(${IP_ADDR_OUTTER_LOC}:${IP_ADDR_OUTTER})"
+fi
+
 DATATIME=`date "+%Y%m%d-%H%M%S"`
+
+# pre-generate the MSG id
+MSG_ID=`date +%N`
 
 # get Alarm from history file,
 # the app should write alarm to alarm file first.
@@ -50,7 +72,7 @@ DATATIME=`date "+%Y%m%d-%H%M%S"`
 Log_Msg() {
 
 ## get the last log
-# if there is no file or file does't contain
+# if there is no file or file does't contain success|error
 if ! grep -Eq "error|success" ${HIS_DIR}/${HIS_FILE} 2>/dev/null; then
 
     # get all of the history in this month
@@ -94,7 +116,13 @@ if [ "$LOGLEVEL" = "error" ]; then
         if [ $ERR_NUM -le $MAX_SEND_TIMES ]; then
             MSG_TO_BE_SEND=true
         else
-            MSG_TO_BE_SEND=false
+            # if last send status failed, continue to send
+            if echo $LAST_ROW_CONTAIN_FLAG | grep -q "ok"; then
+                MSG_TO_BE_SEND=false
+            else
+                MSG_TO_BE_SEND=true
+            fi    
+            
         fi
             
     else
@@ -113,6 +141,12 @@ elif [ "$LOGLEVEL" = "success" ]; then
         MSG_TO_BE_SEND=true
         
     else
+    
+        if echo $LAST_ROW_CONTAIN_FLAG | grep -q "ok"; then
+            MSG_TO_BE_SEND=false
+        else
+            MSG_TO_BE_SEND=true
+        fi
         MSG_TO_BE_SEND=false
     fi
     
@@ -121,7 +155,7 @@ elif [ "$LOGLEVEL" = "success" ]; then
 ## usage error
 else
 
-     echo "[ `$NOW_TIME` | wechat_alarm ] wechat_alarm usage error!!!"
+     echo "wechat_alarm usage error!!!"
      exit 1
 fi
 
@@ -131,7 +165,7 @@ fi
 TITLE_SHORT="${BIN}__Status_${LOGLEVEL}__${IP_ADDR}"
 
 # only show last rows and add zero rows to first and last line
-CONTENT_DETAIL=`tail -n ${MAX_LOG_DETAIL_ROWS} $DETAIL_LOG | \
+CONTENT_DETAIL=`cat $DETAIL_LOG | tail -n ${MAX_LOG_DETAIL_ROWS} | \
   sed 's/$/\n/' | sed '1s/^/\n/' | sed '$G'`
 
 
@@ -147,7 +181,7 @@ if $MSG_TO_BE_SEND; then
         
         # let every msg has different content
         NOW_TIME=`date "+%Y/%m/%d %H:%M:%S"`
-        MSG_ID=`date +%N`
+        
         
         CONTENT_DETAIL_DESP="Dear_${SND_NAME}__msgid_${MSG_ID}__${CONTENT_DETAIL}"
         
@@ -156,8 +190,12 @@ if $MSG_TO_BE_SEND; then
         
         # log 
         if echo $res | grep -q success; then
-            echo "[ $NOW_TIME | ${BIN} ] send wechat msg: $MSG_ID to $SND_NAME success" | tee -a ${DETAIL_LOG}
+        
+            # record the send log
+            sed -i "s/$DATATIME.*/\0 $MSG_ID=ok/" ${HIS_DIR}/${HIS_FILE}
+            echo "[ $NOW_TIME | ${BIN} ] send wechat msg: $MSG_ID to $SND_NAME ok" | tee -a ${DETAIL_LOG}
         else
+            sed -i "s/$DATATIME.*/\0 $MSG_ID=failed/" ${HIS_DIR}/${HIS_FILE}
             echo "[ $NOW_TIME | ${BIN} ] send wechat msg: $MSG_ID to $SND_NAME failed" | tee -a ${DETAIL_LOG}
         fi
         
