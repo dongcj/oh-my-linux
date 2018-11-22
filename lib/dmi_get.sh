@@ -14,10 +14,10 @@ if ! Log &>/dev/null; then
         fi
     }
     FBS_ESC=`echo -en "\033"`
-    COLOR_RED="${FBS_ESC}[1;31m"      
-    COLOR_GREEN="${FBS_ESC}[1;32m";    
-    COLOR_YELLOW="${FBS_ESC}[1;33m"    
-    COLOR_CLOSE="${FBS_ESC}[0m" 
+    COLOR_RED="${FBS_ESC}[1;31m"
+    COLOR_GREEN="${FBS_ESC}[1;32m"
+    COLOR_YELLOW="${FBS_ESC}[1;33m"
+    COLOR_CLOSE="${FBS_ESC}[0m"
     Run() { echo $*; $*; }
 fi
 

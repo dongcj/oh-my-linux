@@ -116,11 +116,11 @@ if [ "$LOGLEVEL" = "error" ]; then
         if [ $ERR_NUM -le $MAX_SEND_TIMES ]; then
             MSG_TO_BE_SEND=true
         else
-            # if last send status failed, continue to send
-            if echo $LAST_ROW_CONTAIN_FLAG | grep -q "ok"; then
-                MSG_TO_BE_SEND=false
-            else
+            # continue to send, but 10 checks only send one alarm
+            if [ $((ERR_NUM%10)) = 0 ]; then
                 MSG_TO_BE_SEND=true
+            else
+                MSG_TO_BE_SEND=false
             fi    
             
         fi
@@ -193,10 +193,10 @@ if $MSG_TO_BE_SEND; then
         
             # record the send log
             sed -i "s/$DATATIME.*/\0 $MSG_ID=ok/" ${HIS_DIR}/${HIS_FILE}
-            echo "[ $NOW_TIME | ${BIN} ] send wechat msg: $MSG_ID to $SND_NAME ok" | tee -a ${DETAIL_LOG}
+            echo "[ $NOW_TIME | ${BIN} ] send wechat msg: $MSG_ID to $SND_NAME ok"
         else
             sed -i "s/$DATATIME.*/\0 $MSG_ID=failed/" ${HIS_DIR}/${HIS_FILE}
-            echo "[ $NOW_TIME | ${BIN} ] send wechat msg: $MSG_ID to $SND_NAME failed" | tee -a ${DETAIL_LOG}
+            echo "[ $NOW_TIME | ${BIN} ] send wechat msg: $MSG_ID to $SND_NAME failed"
         fi
         
     done
