@@ -116,8 +116,8 @@ if [ "$LOGLEVEL" = "error" ]; then
         if [ $ERR_NUM -le $MAX_SEND_TIMES ]; then
             MSG_TO_BE_SEND=true
         else
-            # continue to send, but 10 checks only send one alarm
-            if [ $((ERR_NUM%10)) = 0 ]; then
+            # continue to send, but 30 checks only send one alarm
+            if [ $((ERR_NUM%30)) = 0 ]; then
                 MSG_TO_BE_SEND=true
             else
                 MSG_TO_BE_SEND=false

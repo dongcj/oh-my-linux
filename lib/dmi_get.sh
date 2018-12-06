@@ -75,7 +75,8 @@ Install_Basic_Soft() {
         return
     fi
     
-    softlist_basic="bc ethtool lsscsi net-tools dmidecode smartmontools wget curl"
+    softlist_basic="bc ethtool lsscsi net-tools dmidecode smartmontools \
+      wget curl bsdmainutils"
     softlist_basic=`echo $softlist_basic`
     
     softlist_recommand="bash-completion sysstat bmon fio  hdparm  htop \
