@@ -75,15 +75,19 @@ Install_Basic_Soft() {
         return
     fi
     
-    softlist_basic="bc ethtool lsscsi net-tools dmidecode smartmontools \
-      wget curl bsdmainutils"
+    # the basic command that can be use anywhere
+    softlist_basic="net-tools iputils-ping iproute2 netcat \
+    procps wget curl bsdmainutils"
     softlist_basic=`echo $softlist_basic`
     
-    softlist_recommand="bash-completion sysstat bmon fio  hdparm  htop \
-    ipmitool iotop ifstat locales  mycli nmon ntp jq psmisc \
-    pciutils python-pip  rsync"
+    softlist_recommand="bc ethtool lsscsi  smartmontools sysstat fio hdparm \
+    ipmitool iotop ifstat htop locales mycli nmon bmon ntp jq psmisc \
+    bash-completion dmidecode  pciutils python-pip rsync "
     softlist_recommand=`echo $softlist_recommand`
 
+    softlist_optional="linux-headers-$(uname -r) sysdig ngrep"
+    softlist_optional=`echo $softlist_optional`
+    
     # add chkconfig for ubuntu
     if [ "$OS" = "Ubuntu" ]; then
     
