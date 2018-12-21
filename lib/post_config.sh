@@ -492,9 +492,9 @@ Config_Alias() {
     alias vi='vim'
 EOF
 
-    PROFILE_CONF=/etc/profile
-    if ! grep -q "source ~/.bash_aliases" $PROFILE_CONF; then
-        echo "source ~/.bash_aliases" >>$PROFILE_CONF
+    BASHRC=~/.bashrc
+    if ! grep -q "source ~/.bash_aliases" $BASHRC; then
+        echo "[ -f ~/.bash_aliases ] && source ~/.bash_aliases" >>$BASHRC
     fi
     Log DEBUG "Config alias successful."
 }
