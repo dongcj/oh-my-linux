@@ -82,7 +82,7 @@ Install_Basic_Soft() {
     
     softlist_recommand="bc ethtool lsscsi  smartmontools sysstat fio hdparm \
     ipmitool iotop ifstat htop locales mycli nmon bmon ntp jq psmisc \
-    bash-completion dmidecode  pciutils python-pip rsync "
+    bash-completion dmidecode  pciutils python-pip rsync bridge-utils"
     softlist_recommand=`echo $softlist_recommand`
 
     softlist_optional="linux-headers-$(uname -r) sysdig ngrep"
@@ -425,8 +425,8 @@ Get_DiskInfo() {
 
     # mounted disk
     unset DISK_MOUNTED
-    for i in $DISK_LIST; do
-        if mount | grep -q $i; then
+    for i in $DISK_PATH; do
+        if [ -n "`lsblk -n -o MOUNTPOINT $i`" ]; then
             DISK_MOUNTED="$DISK_MOUNTED $i"
         fi
     done
