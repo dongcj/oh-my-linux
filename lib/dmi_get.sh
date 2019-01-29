@@ -102,7 +102,7 @@ Install_Basic_Soft() {
         
     elif [ "$OS" = "CentOS" ]; then
         if ! rpm -qa | grep -iq epel; then
-            Run yum update
+            Run yum update -y
             Run yum install -y epel-release
          fi
     fi

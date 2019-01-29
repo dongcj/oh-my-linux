@@ -32,22 +32,50 @@ TERM=xterm; export TERM;
 
 [[ "$LANGUAGE" = "cn" ]] && export LANG=en_US.UTF-8  || export LANG=C
 
-FBS_ESC=`echo -en "\033"`
-COLOR_RED="${FBS_ESC}[1;31m"      
-COLOR_GREEN="${FBS_ESC}[1;32m";    
-COLOR_YELLOW="${FBS_ESC}[1;33m"    
-COLOR_CLOSE="${FBS_ESC}[0m"        
-
-CURSOROFF=`echo -e "\033[?25l"`
-CURSORON=`echo -e "\033[?25h"`
 OLD_STTY_SETTING=$(/bin/stty -g)
 
-BOLD=`tput bold`
-SMSO=`tput smso`
-REV=`tput rev`
-UNDERLINE=`tput smul`
-BLINK=`tput blink`
-NORMAL=`tput sgr0`
+
+# you can find all style in: 
+# https://misc.flogisoft.com/bash/tip_colors_and_formatting
+
+## colors style
+FBS_ESC=`echo -en "\033"`
+
+COLOR_RED="${FBS_ESC}[1;31m"      
+COLOR_GREEN="${FBS_ESC}[1;32m";    
+COLOR_YELLOW="${FBS_ESC}[1;33m"   
+ 
+COLOR_CLOSE="${FBS_ESC}[0m"        
+
+## other style
+BOLD_STYLE="${FBS_ESC}[1m"
+BOLD_CLOSE="${FBS_ESC}[22m"
+
+ITALIC_STYLE="${FBS_ESC}[3m"
+ITALIC_CLOSE="${FBS_ESC}[23m"
+
+UNDERLINE_STYLE="${FBS_ESC}[4m"
+UNDERLINE_CLOSE="${FBS_ESC}[0m"
+
+
+
+# the same as above
+#BOLD=`tput bold`
+#UNDERLINE=`tput smul`
+#SMSO=`tput smso`
+#REV=`tput rev`
+#BLINK=`tput blink`
+#NORMAL=`tput sgr0`
+
+## cusor style
+CURSOROFF=`echo -e "\033[?25l"`
+CURSORON=`echo -e "\033[?25h"`
+
+
+
+
+
+
 
 
 OUTPUT_WIDTH=70
