@@ -93,6 +93,51 @@ Config_Services() {
     Log DEBUG "Config services successful."
 }
 
+
+######################################################################
+# 作用: 配置内核参数
+# 用法: Config_Kernel
+# 注意：
+######################################################################
+Config_Kernel() {
+
+    Log DEBUG "Config kernel..."
+    SYST='/sbin/sysctl -e -q -w'
+    SYSCTL_CONF=/etc/sysctl.conf
+    
+    if ! grep -q "Optimized Kernel Globally" ${SYSCTL_CONF}; then
+    
+        echo " " >>${SYSCTL_CONF}
+        echo "# Optimized Kernel Globally" >>${SYSCTL_CONF}
+
+        cat <<EOF >>${SYSCTL_CONF}
+fs.file-max = 6815744
+fs.aio-max-nr = 1048576
+kernel.sem = 250 32000 100 128
+
+EOF
+
+        # Update sysctl settings
+        if [ "$(getconf LONG_BIT)" = "64" ]; then
+          SHM_MAX=68719476736
+          SHM_ALL=4294967296
+        else
+          SHM_MAX=4294967295
+          SHM_ALL=268435456
+        fi
+        
+        $SYST kernel.msgmnb=65536
+        $SYST kernel.msgmax=65536
+        $SYST kernel.shmmax=$SHM_MAX
+        $SYST kernel.shmall=$SHM_ALL
+
+        sysctl -p >&/dev/null
+    fi
+    
+    Log DEBUG "Config kernel successful."
+}
+
+
 ######################################################################
 # 作用: 优化内核网络参数
 # 用法: Config_Kernel_Network
@@ -100,7 +145,10 @@ Config_Services() {
 ######################################################################
 Config_Kernel_Network() {
 
-    Log DEBUG "Config kernel network parameter..."
+    Log DEBUG "Config kernel network..."
+    
+    SYST='/sbin/sysctl -e -q -w'
+    SYSCTL_CONF=/etc/sysctl.conf
     
     if ! grep -q "Optimized Networking Globally" ${SYSCTL_CONF}; then
         echo " " >>${SYSCTL_CONF}
@@ -147,20 +195,9 @@ vm.overcommit_memory = 1
 EOF
 
 
-        # Update sysctl settings
-        SYST='/sbin/sysctl -e -q -w'
-        if [ "$(getconf LONG_BIT)" = "64" ]; then
-          SHM_MAX=68719476736
-          SHM_ALL=4294967296
-        else
-          SHM_MAX=4294967295
-          SHM_ALL=268435456
-        fi
-        $SYST kernel.msgmnb=65536
-        $SYST kernel.msgmax=65536
-        $SYST kernel.shmmax=$SHM_MAX
-        $SYST kernel.shmall=$SHM_ALL
         $SYST net.ipv4.ip_forward=1
+        
+        # security
         $SYST net.ipv4.conf.all.accept_source_route=0
         $SYST net.ipv4.conf.all.accept_redirects=0
         $SYST net.ipv4.conf.all.send_redirects=0
@@ -169,6 +206,12 @@ EOF
         $SYST net.ipv4.conf.default.accept_redirects=0
         $SYST net.ipv4.conf.default.send_redirects=0
         $SYST net.ipv4.conf.default.rp_filter=0
+        
+        # docker optimize
+        $SYST net.bridge.bridge-nf-call-iptables=1
+        $SYST net.ipv4.neigh.default.gc_thresh1=4096
+        $SYST net.ipv4.neigh.default.gc_thresh2=6144
+        $SYST net.ipv4.neigh.default.gc_thresh3=8192
 
         sysctl -p >&/dev/null
     fi
@@ -176,31 +219,6 @@ EOF
     Log DEBUG "Config kernel network parameter successful."
 }
 
-######################################################################
-# 作用: 配置内核参数
-# 用法: Config_Kernel
-# 注意：
-######################################################################
-Config_Kernel() {
-
-    Log DEBUG "Config kernel..."
-    
-    if ! grep -q "Optimized Kernel Globally" ${SYSCTL_CONF}; then
-        echo " " >>${SYSCTL_CONF}
-        echo "# Optimized Kernel Globally" >>${SYSCTL_CONF}
-
-        cat <<EOF >>${SYSCTL_CONF}
-fs.file-max = 6815744
-fs.aio-max-nr = 1048576
-kernel.sem = 250 32000 100 128
-
-EOF
-
-        sysctl -p >&/dev/null
-    fi
-    
-    Log DEBUG "Config kernel successful."
-}
 
 ######################################################################
 # 作用: 配置本机为 NTP Server
