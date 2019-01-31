@@ -82,7 +82,7 @@ Install_Basic_Soft() {
     
     softlist_recommand="bc ethtool lsscsi  smartmontools sysstat fio hdparm \
     ipmitool iotop ifstat htop locales mycli nmon bmon ntp jq psmisc \
-    bash-completion dmidecode  pciutils python-pip rsync bridge-utils"
+    bash-completion dmidecode  pciutils python-pip rsync bridge-utils lrzsz"
     softlist_recommand=`echo $softlist_recommand`
 
     softlist_optional="linux-headers-$(uname -r) sysdig ngrep"
