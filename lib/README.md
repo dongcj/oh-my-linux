@@ -2,5 +2,5 @@
 # 1. dmi_get.sh
 
 ```sh
-wget -qO- http://2.gp/Kh3Q | bash
+wget -qO- https://raw.githubusercontent.com/dongcj/oh-my-linux/master/lib/dmi_get.sh | bash
 ```
