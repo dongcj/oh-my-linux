@@ -308,12 +308,12 @@ Get_MEMInfo() {
     
     # memory speed 
     MEMORY_SPEED=`echo "$MEMORY_INFO" | grep " *Speed: " | grep -v Clock | \
-    sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
+    sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq | xargs`
     
     MEMORY_SPEED=${MEMORY_SPEED:-"Unknown"}
     
     MEMORY_SPEEDCONFIGURED=`echo "$MEMORY_INFO" | grep " *Speed: " | egrep "MHz|MT" | \
-    sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq`
+    sed -n 's/.*Speed: \(.*\) [MHz|MT].*/\1/p' | sort | uniq | xargs`
     MEMORY_SPEEDCONFIGURED=${MEMORY_SPEEDCONFIGURED:-"Unknown"}
     
     MEMORY_MANUFACTURER=`echo "$MEMORY_INFO" | sed -n 's/.*Manufacturer: \(.*\)/\1/p' | \
