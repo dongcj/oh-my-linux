@@ -2,20 +2,22 @@
 
 ### Usage:
 
-# import wechat alarm
-# mkdir -p /etc/scripts/.sender/
-# if ! [ -f /etc/scripts/.sender/wechat_alarm.sh ]; then
-  # echo "starting to download wechat_alarm.sh.."
-  # if ! curl -fsSL --connect-timeout 8 \
-    # https://gist.github.com/dongcj/a5359c870fa4527a7e121e2f2c48b7f0/raw/ >/etc/scripts/.sender/wechat_alarm.sh; then
-        # echo "download wechat_alarm.sh failed"
-        # echo "url: https://gist.github.com/dongcj/a5359c870fa4527a7e121e2f2c48b7f0/raw/"
-        # echo "you can download it to /etc/scripts/.sender/wechat_alarm.sh manual"
-        # echo "and run it again"
-        # exit 1
-  # fi
-# fi
-# chmod a+x /etc/scripts/.sender/*.sh
+:<<EOF
+#import wechat alarm
+mkdir -p /etc/scripts/.sender/
+if ! [ -f /etc/scripts/.sender/wechat_alarm.sh ]; then
+  echo "starting to download wechat_alarm.sh.."
+  if ! curl -fsSL --connect-timeout 20 \
+    https://gist.github.com/dongcj/a5359c870fa4527a7e121e2f2c48b7f0/raw/ >/etc/scripts/.sender/wechat_alarm.sh; then
+        echo "download wechat_alarm.sh failed"
+        echo "url: https://gist.github.com/dongcj/a5359c870fa4527a7e121e2f2c48b7f0/raw/"
+        echo "you can download it to /etc/scripts/.sender/wechat_alarm.sh manual"
+        echo "and run it again"
+        exit 1
+  fi
+fi
+chmod a+x /etc/scripts/.sender/*.sh
+EOF
 
 ## send alarm
 # /etc/scripts/.sender/*.sh <success|error>
@@ -36,7 +38,7 @@ MAX_SEND_TIMES=3
 # max log detail rows
 MAX_LOG_DETAIL_ROWS=20
 
-# check the $BIN is already define
+# check the $BIN is already defined by parent
 [ -z "$BIN" ] && echo "Please export BIN variable" && exit 1
 DETAIL_LOG="/var/log/${BIN}.log"
 
@@ -45,20 +47,60 @@ HIS_FILE=${BIN}_`date "+%d"`
 mkdir -p $HIS_DIR
 
 IP_ADDR_LOCAL=$(ip route get 8.8.8.8 | grep src | \
-  awk '{ i=1; while(i<NF) { if ( $i == "src" ) print $(i+1); i++ }}')
-IP_ADDR_OUTTER_IP=`curl -s --connect-timeout 5 -4 ip.sb`
-IP_ADDR_OUTTER_LOC=`curl -sSL https://api.ip.sb/geoip | jq .city`
+  awk '{ i=1; while(i<=NF) { if ( $i ~ "src" ) print $(i+1); i++ }}')
+IP_ADDR_OUTTER=`curl -s --noproxy --connect-timeout 5 -4 ip.sb`
 
-if [ "$IP_ADDR_LOCAL" = "$IP_ADDR_OUTTER_IP" ]; then
-    IP_ADDR="$IP_ADDR_OUTTER(${IP_ADDR_OUTTER_LOC})"
+if [ "$IP_ADDR_LOCAL" = "$IP_ADDR_OUTTER" ]; then
+    IP_ADDR="`hostname`(${IP_ADDR_OUTTER})"
 else
-    IP_ADDR="${IP_ADDR_LOCAL}(${IP_ADDR_OUTTER_LOC}:${IP_ADDR_OUTTER})"
+    IP_ADDR="`hostname`(${IP_ADDR_LOCAL}:${IP_ADDR_OUTTER})"
 fi
 
 DATATIME=`date "+%Y%m%d-%H%M%S"`
 
 # pre-generate the MSG id
 MSG_ID=`date +%N`
+
+Check_OS_Distrib(){
+
+   RELEASE_FILE=/etc/*-release
+   if grep -Eqi "CentOS" /etc/issue &>/dev/null || \
+   grep -Eq "CentOS" $RELEASE_FILE &>/dev/null; then
+       OS=CentOS
+       PKG_INST_CMD="yum -y install"
+       RELEASE_FILE=/etc/centos-release
+       
+   elif grep -Eqi "Debian" /etc/issue  &>/dev/null || \
+   grep -Eq "Debian" $RELEASE_FILE &>/dev/null; then
+       OS=Debian
+       PKG_INST_CMD="apt -y install"
+       RELEASE_FILE=/etc/lsb-release
+       
+   elif grep -Eqi "Ubuntu" /etc/issue  &>/dev/null || \
+   grep -Eq "Ubuntu" $RELEASE_FILE &>/dev/null; then
+       OS=Ubuntu
+       PKG_INST_CMD="apt -y install"
+       RELEASE_FILE=/etc/lsb-release
+       
+   elif grep -Eqi "Alpine" /etc/issue  &>/dev/null || \
+   grep -Eq "Alpine" $RELEASE_FILE &>/dev/null; then
+       OS=Alpine
+       PKG_INST_CMD="apk -y -q install"
+       RELEASE_FILE=/etc/lsb-release
+
+   elif grep -Eqi "OpenWrt" /etc/openwrt_release  &>/dev/null || \
+   grep -Eq "OpenWrt" $RELEASE_FILE &>/dev/null; then
+       OS=OpenWrt
+       PKG_INST_CMD="opkg install"
+       RELEASE_FILE=/etc/openwrt_release       
+   else
+       echo "Not support OS, Please confirm OS Distribution or try again!"
+       exit 1
+   fi
+}
+
+# install dep
+which jq &>/dev/null || { Check_OS_Distrib; $PKG_INST_CMD jq; }
 
 # get Alarm from history file,
 # the app should write alarm to alarm file first.
@@ -106,11 +148,8 @@ if [ "$LOGLEVEL" = "error" ]; then
 
         # if the ERR_NUM is not numric, reset
         if [ -n "`echo "$ERR_NUM" | tr -d \[0-9\]`" ]; then
-            ERR_NUM=0
+            ERR_NUM=1
         fi
-
-        # accumulation
-        ERR_NUM=$((ERR_NUM+1))
 
         # just send 3 times error msg
         if [ $ERR_NUM -le $MAX_SEND_TIMES ]; then
@@ -180,8 +219,7 @@ if $MSG_TO_BE_SEND; then
         SND_KEY=${i#*:}
         
         # let every msg has different content
-        NOW_TIME=`date "+%Y/%m/%d %H:%M:%S"`
-        
+        NOW_TIME=`date "+%Y-%m-%d %H:%M:%S"`
         
         CONTENT_DETAIL_DESP="Dear_${SND_NAME}__msgid_${MSG_ID}__${CONTENT_DETAIL}"
         
