@@ -384,7 +384,11 @@ Disable_IPv6() {
     SYSCONFIG_NETWORK=/etc/sysconfig/network
     
     # one method
-    [ -f /proc/sys/net/ipv6/conf/all/disable_ipv6 ] && echo 1 >/proc/sys/net/ipv6/conf/all/disable_ipv6
+    [ -f /proc/sys/net/ipv6/conf/all/disable_ipv6 ] && \
+      echo 1 >/proc/sys/net/ipv6/conf/all/disable_ipv6
+    grep -q disable_ipv6 $SYSCTL_CONF && \
+      echo "echo 1 >/proc/sys/net/ipv6/conf/all/disable_ipv6" || \
+      echo "net.ipv6.conf.all.disable_ipv6 = 1" >>$SYSCTL_CONF
     
     # another method
     if [ "`awk -F"=" '/net.ipv6.conf.all.disable_ipv6/ {print $2}' ${SYSCTL_CONF} | xargs`" != "1" ]; then

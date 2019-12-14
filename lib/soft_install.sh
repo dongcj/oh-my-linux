@@ -781,7 +781,6 @@ Push_HostInfo() {
     Log DEBUG "push hostinfo file to ceph-ai"
     Pusher FILE ${RUN_DIR}/${HOSTINFO_FILE}
 
-
 }
 
 
@@ -811,7 +810,7 @@ Check_OS_Distrib(){
    elif grep -Eqi "Alpine" /etc/issue || grep -Eq "Alpine" $RELEASE_FILE; then
        OS=Alpine
        PKG_INST_CMD="apk -y -q install"
-        RELEASE_FILE=/etc/lsb-release
+       RELEASE_FILE=/etc/lsb-release
         
    else
        echo "Not support OS, Please reinstall OS and retry!"

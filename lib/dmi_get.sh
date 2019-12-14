@@ -52,9 +52,14 @@ Check_OS_Distrib(){
        OS=Alpine
        PKG_INST_CMD="apk -y -q install"
        RELEASE_FILE=/etc/lsb-release
-        
+
+   elif grep -Eqi "OpenWrt" /etc/openwrt_release  &>/dev/null || \
+   grep -Eq "OpenWrt" $RELEASE_FILE &>/dev/null; then
+       OS=OpenWrt
+       PKG_INST_CMD="opkg install"
+       RELEASE_FILE=/etc/openwrt_release       
    else
-       echo "Not support OS, Please reinstall OS and retry!"
+       echo "Not support OS, Please confirm OS Distribution or try again!"
        exit 1
    fi
 }

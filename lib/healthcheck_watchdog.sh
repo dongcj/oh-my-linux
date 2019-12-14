@@ -79,7 +79,7 @@ if [ -n "${ERROR_SERVICE}" ]; then
     Check_Multi_Times
          
 else
-    echo "[ `$LOGTIME` | ${BIN} ] Service no problem."
+    echo "[ `$LOGTIME` | ${BIN} ] Service success."
     
     # login check
     echo "[ `$LOGTIME` | ${BIN} ] Trying to do login check."
