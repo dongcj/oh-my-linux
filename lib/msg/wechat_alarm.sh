@@ -53,7 +53,7 @@ IP_ADDR_OUTTER=`curl -s --noproxy --connect-timeout 5 -4 ip.sb`
 if [ "$IP_ADDR_LOCAL" = "$IP_ADDR_OUTTER" ]; then
     IP_ADDR="`hostname`(${IP_ADDR_OUTTER})"
 else
-    IP_ADDR="`hostname`(${IP_ADDR_LOCAL}:${IP_ADDR_OUTTER})"
+    IP_ADDR="`hostname`(${IP_ADDR_LOCAL}|${IP_ADDR_OUTTER})"
 fi
 
 DATATIME=`date "+%Y%m%d-%H%M%S"`
@@ -148,8 +148,11 @@ if [ "$LOGLEVEL" = "error" ]; then
 
         # if the ERR_NUM is not numric, reset
         if [ -n "`echo "$ERR_NUM" | tr -d \[0-9\]`" ]; then
-            ERR_NUM=1
+            ERR_NUM=0
         fi
+        
+        # accumulation
+        ERR_NUM=$((ERR_NUM+1))
 
         # just send 3 times error msg
         if [ $ERR_NUM -le $MAX_SEND_TIMES ]; then
@@ -172,23 +175,23 @@ if [ "$LOGLEVEL" = "error" ]; then
     
     echo -e "$DATATIME\t${LOGLEVEL}[${ERR_NUM}]" >>${HIS_DIR}/${HIS_FILE}  
 
-## when succ, only one success msg to be send
+## when success, only one success msg to be send
 elif [ "$LOGLEVEL" = "success" ]; then   
     
-    # if the last row contain "error"
+    # if last row contain "error"
     if echo $LAST_ROW_CONTAIN_FLAG | grep -q "error"; then
         MSG_TO_BE_SEND=true
         
     else
-    
-        if echo $LAST_ROW_CONTAIN_FLAG | grep -q "ok"; then
-            MSG_TO_BE_SEND=false
-        else
+        # if last row contain failed, need to send
+        if echo $LAST_ROW_CONTAIN_FLAG | grep -q "failed"; then
             MSG_TO_BE_SEND=true
+        else
+            MSG_TO_BE_SEND=false
         fi
-        MSG_TO_BE_SEND=false
+
     fi
-    
+    ERR_NUM=0
     echo -e "$DATATIME\t${LOGLEVEL}" >>${HIS_DIR}/${HIS_FILE}  
     
 ## usage error
@@ -200,17 +203,15 @@ fi
 
 }
 
+  
+# # loop to send wechat msg
+Send_Msg() {
 
-TITLE_SHORT="${BIN}__Status_${LOGLEVEL}__${IP_ADDR}"
+TITLE_SHORT="${BIN}__Status_${LOGLEVEL}__${ERR_NUM}__${IP_ADDR}"
 
 # only show last rows and add zero rows to first and last line
 CONTENT_DETAIL=`cat $DETAIL_LOG | tail -n ${MAX_LOG_DETAIL_ROWS} | \
   sed 's/$/\n/' | sed '1s/^/\n/' | sed '$G'`
-
-
-  
-# # loop to send wechat msg
-Send_Msg() {
 
 if $MSG_TO_BE_SEND; then
 
