@@ -39,7 +39,7 @@ Check_OS_Distrib(){
    grep -Eq "Debian" $RELEASE_FILE &>/dev/null; then
        OS=Debian
        PKG_INST_CMD="apt -y install"
-       RELEASE_FILE=/etc/lsb-release
+       RELEASE_FILE=/etc/os-release
        
    elif grep -Eqi "Ubuntu" /etc/issue  &>/dev/null || \
    grep -Eq "Ubuntu" $RELEASE_FILE &>/dev/null; then
