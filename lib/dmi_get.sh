@@ -22,9 +22,9 @@ if ! Log &>/dev/null; then
 fi
 
 ######################################################################
-# ×÷ÓÃ: ÅĞ¶Ï OS ·¢ĞĞ°æ
-# ÓÃ·¨: Check_OS_Distrib 
-# ×¢Òâ£º
+# ä½œç”¨: åˆ¤æ–­ OS å‘è¡Œç‰ˆ
+# ç”¨æ³•: Check_OS_Distrib 
+# æ³¨æ„ï¼š
 ######################################################################
 Check_OS_Distrib(){
 
@@ -65,9 +65,9 @@ Check_OS_Distrib(){
 }
 
 ######################################################################
-# ×÷ÓÃ: Îª·şÎñÆ÷°²×°ËùĞèÒªµÄ»ù´¡Èí¼ş
-# ÓÃ·¨: Install_Basic_Soft
-# ×¢Òâ£ºÒÀÀµ Check_OS_DISTRIB
+# ä½œç”¨: ä¸ºæœåŠ¡å™¨å®‰è£…æ‰€éœ€è¦çš„åŸºç¡€è½¯ä»¶
+# ç”¨æ³•: Install_Basic_Soft
+# æ³¨æ„ï¼šä¾èµ– Check_OS_DISTRIB
 ######################################################################
 Install_Basic_Soft() {
 
@@ -81,17 +81,20 @@ Install_Basic_Soft() {
     fi
     
     # the basic command that can be use anywhere
-    softlist_basic="net-tools iputils-ping iproute2 netcat \
+    SOFTLIST_BASIC="net-tools iputils-ping iproute2 netcat \
     procps wget curl bsdmainutils"
-    softlist_basic=`echo $softlist_basic`
+    SOFTLIST_BASIC=`echo $SOFTLIST_BASIC`
     
-    softlist_recommand="bc ethtool lsscsi  smartmontools sysstat fio hdparm \
+    SOFTLIST_RECOMMAND="bc ethtool lsscsi  smartmontools sysstat fio hdparm \
     ipmitool iotop ifstat htop locales mycli nmon bmon ntp jq psmisc \
     bash-completion dmidecode  pciutils python-pip rsync bridge-utils lrzsz"
-    softlist_recommand=`echo $softlist_recommand`
+    SOFTLIST_RECOMMAND=`echo $SOFTLIST_RECOMMAND`
 
-    softlist_optional="linux-headers-$(uname -r) sysdig ngrep"
-    softlist_optional=`echo $softlist_optional`
+    SOFTLIST_OPTIONAL="linux-headers-$(uname -r) sysdig ngrep"
+    SOFTLIST_OPTIONAL=`echo $SOFTLIST_OPTIONAL`
+    
+    UBUNTU_RECOMMAND="apt-transport-https ca-certificates gnupg2 \
+      software-properties-common"
     
     # add chkconfig for ubuntu
     if [ "$OS" = "Ubuntu" ]; then
@@ -105,6 +108,8 @@ Install_Basic_Soft() {
         Run $PKG_INST_CMD sysv-rc-conf rcconf && \
         Run ln -s /usr/sbin/sysv-rc-conf /usr/bin/chkconfig; }
         
+        Run apt -y install $UBUNTU_RECOMMAND
+        
     elif [ "$OS" = "CentOS" ]; then
         if ! rpm -qa | grep -iq epel; then
             Run yum update -y
@@ -112,8 +117,8 @@ Install_Basic_Soft() {
          fi
     fi
     
-    Run $PKG_INST_CMD $softlist_basic
-    Run $PKG_INST_CMD $softlist_recommand
+    Run $PKG_INST_CMD $SOFTLIST_BASIC
+    Run $PKG_INST_CMD $SOFTLIST_RECOMMAND
     
     # use mycli instead of mysql command
     if `which mycli` &>/dev/null; then
@@ -145,9 +150,9 @@ Install_Basic_Soft() {
 
 
 ######################################################################
-# ×÷ÓÃ: »ñÈ¡·şÎñÆ÷ System ĞÅÏ¢
-# ÓÃ·¨: Get_SystemInfo
-# ×¢Òâ£º
+# ä½œç”¨: è·å–æœåŠ¡å™¨ System ä¿¡æ¯
+# ç”¨æ³•: Get_SystemInfo
+# æ³¨æ„ï¼š
 ######################################################################
 Get_SystemInfo() {
 
@@ -194,9 +199,9 @@ Get_SystemInfo() {
 
 
 ######################################################################
-# ×÷ÓÃ: »ñÈ¡·şÎñÆ÷ OS ĞÅÏ¢
-# ÓÃ·¨: Get_OSInfo
-# ×¢Òâ£º
+# ä½œç”¨: è·å–æœåŠ¡å™¨ OS ä¿¡æ¯
+# ç”¨æ³•: Get_OSInfo
+# æ³¨æ„ï¼š
 ######################################################################
 Get_OSInfo() {
 
@@ -225,9 +230,9 @@ Get_OSInfo() {
 
 
 ######################################################################
-# ×÷ÓÃ: »ñÈ¡·şÎñÆ÷ CPU ĞÅÏ¢
-# ÓÃ·¨: Get_CPUInfo
-# ×¢Òâ£º
+# ä½œç”¨: è·å–æœåŠ¡å™¨ CPU ä¿¡æ¯
+# ç”¨æ³•: Get_CPUInfo
+# æ³¨æ„ï¼š
 ######################################################################
 Get_CPUInfo() {
 
@@ -272,9 +277,9 @@ Get_CPUInfo() {
 
 
 ######################################################################
-# ×÷ÓÃ: »ñÈ¡·şÎñÆ÷ Memory ĞÅÏ¢
-# ÓÃ·¨: Get_MEMInfo
-# ×¢Òâ£º
+# ä½œç”¨: è·å–æœåŠ¡å™¨ Memory ä¿¡æ¯
+# ç”¨æ³•: Get_MEMInfo
+# æ³¨æ„ï¼š
 ######################################################################
 Get_MEMInfo() {
 
@@ -348,9 +353,9 @@ Get_MEMInfo() {
 
 
 ######################################################################
-# ×÷ÓÃ: »ñÈ¡·şÎñÆ÷ Disk ĞÅÏ¢
-# ÓÃ·¨: Get_DiskInfo
-# ×¢Òâ£º
+# ä½œç”¨: è·å–æœåŠ¡å™¨ Disk ä¿¡æ¯
+# ç”¨æ³•: Get_DiskInfo
+# æ³¨æ„ï¼š
 ######################################################################
 Get_DiskInfo() {
 
@@ -513,7 +518,7 @@ Get_DiskInfo() {
                 # get disk rotation rate
                 DISK_ROTATION_RATE_LIST="$DISK_ROTATION_RATE_LIST ${disk_path}:'${disk_rotation_rate}'"
 
-            # if it is LSI raid, use "MegaCli64 -pdlist ¨CaALL"
+            # if it is LSI raid, use "MegaCli64 -pdlist â€“aALL"
             else
                 
                 if [ "$raidcard_brand" = "LSI" ]; then
@@ -607,9 +612,9 @@ Get_DiskInfo() {
 
 
 ######################################################################
-# ×÷ÓÃ: »ñÈ¡·şÎñÆ÷ Network ĞÅÏ¢
-# ÓÃ·¨: Get_NetInfo
-# ×¢Òâ£º
+# ä½œç”¨: è·å–æœåŠ¡å™¨ Network ä¿¡æ¯
+# ç”¨æ³•: Get_NetInfo
+# æ³¨æ„ï¼š
 ######################################################################
 Get_NetInfo() {
 
