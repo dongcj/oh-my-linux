@@ -41,6 +41,7 @@ MAX_LOG_DETAIL_ROWS=20
 # check the $BIN is already defined by parent
 [ -z "$BIN" ] && echo "Please export BIN variable" && exit 1
 DETAIL_LOG="/var/log/${BIN}.log"
+[ -f "$DETAIL_LOG" ] || touch $DETAIL_LOG
 
 HIS_DIR=/etc/scripts/.his/`date "+%Y"`/`date "+%m"`
 HIS_FILE=${BIN}_`date "+%d"`
@@ -51,15 +52,17 @@ IP_ADDR_LOCAL=$(ip route get 8.8.8.8 | grep src | \
 IP_ADDR_OUTTER=`curl -s --noproxy --connect-timeout 5 -4 ip.sb`
 
 if [ "$IP_ADDR_LOCAL" = "$IP_ADDR_OUTTER" ]; then
-    IP_ADDR="`hostname`(${IP_ADDR_OUTTER})"
+    IP_ADDR="`uname -n`(${IP_ADDR_OUTTER})"
 else
-    IP_ADDR="`hostname`(${IP_ADDR_LOCAL}|${IP_ADDR_OUTTER})"
+    IP_ADDR="`uname -n`(${IP_ADDR_LOCAL}|${IP_ADDR_OUTTER})"
 fi
 
 DATATIME=`date "+%Y%m%d-%H%M%S"`
 
 # pre-generate the MSG id
 MSG_ID=`date +%N`
+
+[ -z "$MSG_ID" ] && MSG_ID=`head -20 /dev/urandom | md5sum | head -c 9`
 
 Check_OS_Distrib(){
 
